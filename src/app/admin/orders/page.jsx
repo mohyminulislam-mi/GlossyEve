@@ -1,25 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import {
-  Search,
-
-  Eye,
-  Truck,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  AlertCircle,
-
-  ChevronDown,
-  X,
-  Calendar } from
-'lucide-react';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/firebase';
-
+import { Search, Eye, Truck, CheckCircle2, XCircle, Clock, AlertCircle, ChevronDown, X, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import mockOrders from '@/data/orders.json';
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -31,22 +16,33 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snapshot) => {
-      setOrders(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-      setLoading(false);
-    });
-    return unsub;
+    fetchOrders();
   }, []);
 
-  const updateStatus = async (orderId, newStatus) => {
-    try {
-      await updateDoc(doc(db, 'orders', orderId), { status: newStatus });
-      if (selectedOrder?.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus });
-      }
-    } catch (error) {
-      console.error('Error updating status:', error);
+  const fetchOrders = () => {
+    const localOrders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
+    const allOrders = [...localOrders, ...mockOrders].sort((a, b) => 
+      new Date(b.createdAt) - new Date(a.createdAt)
+    );
+    setOrders(allOrders);
+    setLoading(false);
+  };
+
+  const updateStatus = (orderId, newStatus) => {
+    // Check if it's in localStorage
+    const localOrders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
+    const isLocal = localOrders.some(o => o.id === orderId);
+
+    if (isLocal) {
+      const updatedLocal = localOrders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+      localStorage.setItem('aura_orders', JSON.stringify(updatedLocal));
+    }
+    
+    // Update local state
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    
+    if (selectedOrder?.id === orderId) {
+      setSelectedOrder({ ...selectedOrder, status: newStatus });
     }
   };
 
@@ -61,7 +57,7 @@ export default function Orders() {
 
     let matchesDate = true;
     if (dateRange.start || dateRange.end) {
-      const orderDate = order.createdAt?.toDate?.();
+      const orderDate = new Date(order.createdAt);
       if (orderDate) {
         if (dateRange.start) {
           const start = new Date(dateRange.start);
@@ -230,7 +226,7 @@ export default function Orders() {
                     </div>
                   </td>
                   <td className="p-6 text-xs text-slate-400">
-                    {order.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}
+                    {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                   <td className="p-6">
                     <button

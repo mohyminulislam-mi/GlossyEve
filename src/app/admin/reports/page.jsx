@@ -1,38 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import {
-  TrendingUp,
-
-  DollarSign,
-  ShoppingBag,
-
-
-  Download,
-  BarChart3,
-
-  ArrowUpRight,
-  ArrowDownRight } from
-'lucide-react';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '@/firebase';
-
-
+import { TrendingUp, DollarSign, ShoppingBag, Download, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-
-
-  PieChart,
-  Cell,
-  Pie } from
-'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Cell, Pie } from 'recharts';
+import mockOrders from '@/data/orders.json';
+import { MOCK_PRODUCTS } from '@/constants';
 
 export default function Reports() {
   const [orders, setOrders] = useState([]);
@@ -40,17 +13,10 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubOrders = onSnapshot(collection(db, 'orders'), (snapshot) => {
-      setOrders(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-    });
-    const unsubProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
-      setProducts(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-      setLoading(false);
-    });
-    return () => {
-      unsubOrders();
-      unsubProducts();
-    };
+    const localOrders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
+    setOrders([...localOrders, ...mockOrders]);
+    setProducts(MOCK_PRODUCTS);
+    setLoading(false);
   }, []);
 
   // Calculate stats
@@ -66,7 +32,7 @@ export default function Reports() {
   }).reverse();
 
   const salesData = last7Days.map((date) => {
-    const dayOrders = orders.filter((o) => o.createdAt?.toDate?.()?.toISOString().split('T')[0] === date);
+    const dayOrders = orders.filter((o) => new Date(o.createdAt).toISOString().split('T')[0] === date);
     return {
       name: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
       revenue: dayOrders.reduce((sum, o) => sum + o.total, 0),

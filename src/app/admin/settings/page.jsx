@@ -1,22 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import {
-
-  Globe,
-  CreditCard,
-
-
-  Save,
-  Percent,
-  Truck,
-  CheckCircle2 } from
-'lucide-react';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { db } from '@/firebase';
-
+import { Globe, CreditCard, Save, Percent, Truck, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
-
 
 export default function Settings() {
   const [settings, setSettings] = useState(null);
@@ -25,33 +11,30 @@ export default function Settings() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'settings', 'general'), (snapshot) => {
-      if (snapshot.exists()) {
-        setSettings(snapshot.data());
-      } else {
-        // Initialize default settings
-        const defaultSettings = {
-          siteName: 'AURA',
-          taxRate: 5,
-          shippingFee: 100,
-          freeShippingThreshold: 5000,
-          paymentMethods: ['cod', 'bkash', 'card']
-        };
-        setDoc(doc(db, 'settings', 'general'), defaultSettings);
-        setSettings(defaultSettings);
-      }
-      setLoading(false);
-    });
-    return unsub;
+    const localSettings = localStorage.getItem('aura_settings');
+    if (localSettings) {
+      setSettings(JSON.parse(localSettings));
+    } else {
+      const defaultSettings = {
+        siteName: 'AURA',
+        taxRate: 5,
+        shippingFee: 100,
+        freeShippingThreshold: 5000,
+        paymentMethods: ['cod', 'bkash', 'card']
+      };
+      localStorage.setItem('aura_settings', JSON.stringify(defaultSettings));
+      setSettings(defaultSettings);
+    }
+    setLoading(false);
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!settings) return;
 
     setSaving(true);
     try {
-      await setDoc(doc(db, 'settings', 'general'), settings);
+      localStorage.setItem('aura_settings', JSON.stringify(settings));
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {

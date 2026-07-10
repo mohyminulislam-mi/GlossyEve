@@ -1,6 +1,0 @@
-{
-  "plugins": [
-    ["@babel/plugin-transform-typescript", { "isTSX": true, "allExtensions": true }],
-    "@babel/plugin-syntax-jsx"
-  ]
-}

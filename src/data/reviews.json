@@ -1,0 +1,26 @@
+[
+  {
+    "id": "rev-1",
+    "productId": "p1",
+    "userName": "Sarah K.",
+    "rating": 5,
+    "comment": "Absolutely love the quality and the fit! Highly recommended.",
+    "createdAt": "2024-03-10T12:00:00Z"
+  },
+  {
+    "id": "rev-2",
+    "productId": "p1",
+    "userName": "Mila R.",
+    "rating": 4,
+    "comment": "Very comfortable and elegant design.",
+    "createdAt": "2024-03-15T09:30:00Z"
+  },
+  {
+    "id": "rev-3",
+    "productId": "p2",
+    "userName": "Ayesha A.",
+    "rating": 5,
+    "comment": "Perfect fit and very sexy. My husband loved it!",
+    "createdAt": "2024-04-05T20:15:00Z"
+  }
+]

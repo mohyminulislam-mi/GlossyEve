@@ -1,23 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import {
-  Plus,
-  Search,
-  Ticket,
-  Trash2,
-  Edit2,
-  Calendar,
-
-  Hash,
-  X,
-  CheckCircle2,
-  XCircle } from
-
-'lucide-react';
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/firebase';
-
+import { Plus, Search, Ticket, Trash2, Edit2, Calendar, Hash, X, CheckCircle2, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 
@@ -29,21 +13,33 @@ export default function Coupons() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'coupons'), (snapshot) => {
-      setCoupons(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-      setLoading(false);
-    });
-    return unsub;
+    const localCoupons = localStorage.getItem('aura_coupons');
+    if (localCoupons) {
+      setCoupons(JSON.parse(localCoupons));
+    } else {
+      const defaultCoupons = [
+        { id: 'c1', code: 'AURA10', discountType: 'percentage', discountValue: 10, expirationDate: '2024-12-31', usageLimit: 100, usageCount: 5, isActive: true }
+      ];
+      localStorage.setItem('aura_coupons', JSON.stringify(defaultCoupons));
+      setCoupons(defaultCoupons);
+    }
+    setLoading(false);
   }, []);
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this coupon?')) {
-      await deleteDoc(doc(db, 'coupons', id));
+      const localCoupons = JSON.parse(localStorage.getItem('aura_coupons') || '[]');
+      const updated = localCoupons.filter(c => c.id !== id);
+      localStorage.setItem('aura_coupons', JSON.stringify(updated));
+      setCoupons(updated);
     }
   };
 
-  const toggleStatus = async (id, currentStatus) => {
-    await updateDoc(doc(db, 'coupons', id), { isActive: !currentStatus });
+  const toggleStatus = (id, currentStatus) => {
+    const localCoupons = JSON.parse(localStorage.getItem('aura_coupons') || '[]');
+    const updated = localCoupons.map(c => c.id === id ? { ...c, isActive: !currentStatus } : c);
+    localStorage.setItem('aura_coupons', JSON.stringify(updated));
+    setCoupons(updated);
   };
 
   const filteredCoupons = coupons.filter((c) =>
@@ -198,14 +194,22 @@ function CouponForm({ coupon, onClose }) {
     isActive: true
   });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     try {
+      const localCoupons = JSON.parse(localStorage.getItem('aura_coupons') || '[]');
+      
       if (coupon?.id) {
-        await updateDoc(doc(db, 'coupons', coupon.id), formData);
+        // Update
+        const updated = localCoupons.map(c => c.id === coupon.id ? formData : c);
+        localStorage.setItem('aura_coupons', JSON.stringify(updated));
       } else {
-        await addDoc(collection(db, 'coupons'), formData);
+        // Add new
+        const newCoupon = { ...formData, id: `c-${Math.random().toString(36).substr(2, 9)}` };
+        localStorage.setItem('aura_coupons', JSON.stringify([...localCoupons, newCoupon]));
       }
+      
+      window.location.reload();
       onClose();
     } catch (error) {
       console.error('Error saving coupon:', error);

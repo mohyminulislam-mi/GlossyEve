@@ -40,7 +40,7 @@ export default function Cart() {
           <AnimatePresence mode="popLayout">
             {cart.map((item) =>
             <motion.div
-              key={`${item.id}-${item.selectedSize}-${item.selectedColor}`}
+              key={item.id}
               layout
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -60,7 +60,7 @@ export default function Cart() {
                       </p>
                     </div>
                     <button
-                    onClick={() => removeFromCart(item.id, item.selectedSize, item.selectedColor)}
+                    onClick={() => removeFromCart(item.id)}
                     className="p-2 text-slate-300 hover:text-rose-500">
                     
                       <Trash2 className="h-5 w-5" />
@@ -70,14 +70,14 @@ export default function Cart() {
                   <div className="mt-4 flex items-center justify-between">
                     <div className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50 p-1">
                       <button
-                      onClick={() => updateQuantity(item.id, item.selectedSize, item.selectedColor, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-brand-rose">
                       
                         <Minus className="h-4 w-4" />
                       </button>
                       <span className="w-4 text-center font-bold text-slate-900">{item.quantity}</span>
                       <button
-                      onClick={() => updateQuantity(item.id, item.selectedSize, item.selectedColor, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white hover:text-brand-rose">
                       
                         <Plus className="h-4 w-4" />

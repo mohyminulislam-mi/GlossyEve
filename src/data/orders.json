@@ -1,0 +1,39 @@
+[
+  {
+    "id": "ORD-001",
+    "userId": "admin-123",
+    "total": 4500,
+    "status": "delivered",
+    "paymentMethod": "Online",
+    "createdAt": "2024-04-20T10:30:00Z",
+    "items": [
+      { "id": "p1", "name": "Silk Nightgown", "price": 2500, "quantity": 1, "selectedSize": "M", "images": ["/products/p1-1.jpg"] },
+      { "id": "p2", "name": "Lace Bra Set", "price": 2000, "quantity": 1, "selectedSize": "34B", "images": ["/products/p2-1.jpg"] }
+    ],
+    "shippingAddress": {
+      "fullName": "Mohyminul Islam",
+      "phone": "01700000000",
+      "district": "Dhaka",
+      "area": "Dhanmondi",
+      "address": "House 123, Road 45"
+    }
+  },
+  {
+    "id": "ORD-002",
+    "userId": "cust-456",
+    "total": 1200,
+    "status": "pending",
+    "paymentMethod": "COD",
+    "createdAt": "2024-04-25T14:45:00Z",
+    "items": [
+      { "id": "p3", "name": "Cotton Panty Pack", "price": 1200, "quantity": 1, "selectedSize": "L", "images": ["/products/p3-1.jpg"] }
+    ],
+    "shippingAddress": {
+      "fullName": "Nusrat Jahan",
+      "phone": "01800000000",
+      "district": "Chittagong",
+      "area": "GEC",
+      "address": "Apartment 4B, Hill View"
+    }
+  }
+]

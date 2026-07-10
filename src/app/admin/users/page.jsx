@@ -1,23 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import {
-  Search,
-  Filter,
-  User,
-  Trash2,
-  Shield,
-  ShieldAlert,
-
-  Mail } from
-
-
-'lucide-react';
-import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/firebase';
-
-
+import { Search, Filter, User, Trash2, Shield, ShieldAlert, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import mockUsers from '@/data/users.json';
 
 export default function UsersView() {
   const [users, setUsers] = useState([]);
@@ -25,23 +11,20 @@ export default function UsersView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'users'), (snapshot) => {
-      setUsers(snapshot.docs.map((doc) => ({ ...doc.data(), uid: doc.id })));
-      setLoading(false);
-    });
-    return unsub;
+    setUsers(mockUsers);
+    setLoading(false);
   }, []);
 
-  const toggleRole = async (uid, currentRole) => {
+  const toggleRole = (uid, currentRole) => {
     const newRole = currentRole === 'admin' ? 'customer' : 'admin';
     if (window.confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
-      await updateDoc(doc(db, 'users', uid), { role: newRole });
+      setUsers(prev => prev.map(u => u.uid === uid ? { ...u, role: newRole } : u));
     }
   };
 
-  const handleDelete = async (uid) => {
+  const handleDelete = (uid) => {
     if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      await deleteDoc(doc(db, 'users', uid));
+      setUsers(prev => prev.filter(u => u.uid !== uid));
     }
   };
 

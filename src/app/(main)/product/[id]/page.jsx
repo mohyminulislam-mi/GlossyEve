@@ -7,6 +7,7 @@ import { ShoppingBag, Heart, Ruler, ShieldCheck, Truck, ChevronRight, ChevronLef
 import { MOCK_PRODUCTS } from '@/constants';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { useWishlist } from '@/hooks/useWishlist';
 import SizeCalculator from '@/components/SizeCalculator';
 import ProductReviews from '@/components/ProductReviews';
 import { cn } from '@/lib/utils';
@@ -17,7 +18,7 @@ export default function ProductDetail() {
   const router = useRouter();
 
   const { addToCart } = useCart();
-  const { toggleWishlist, profile } = useAuth();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [isSizeCalcOpen, setIsSizeCalcOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
@@ -45,7 +46,7 @@ export default function ProductDetail() {
 
   }
 
-  const isWishlisted = profile?.wishlist?.includes(product.id) || false;
+  const isWishlisted = isInWishlist(product.id);
 
   const handleAddToCart = () => {
     if (!selectedSize || !selectedColor) {
@@ -61,11 +62,11 @@ export default function ProductDetail() {
       return;
     }
     addToCart(product, quantity, selectedSize, selectedColor);
-    router.push('/checkout');
+    router.push('/cart');
   };
 
   const handleWishlist = () => {
-    toggleWishlist(product.id);
+    toggleWishlist(product);
   };
 
   return (

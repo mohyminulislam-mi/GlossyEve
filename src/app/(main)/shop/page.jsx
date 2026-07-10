@@ -18,6 +18,8 @@ function ShopContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -27,13 +29,29 @@ function ShopContent() {
   const searchFilter = searchParams.get('search');
   const sortFilter = searchParams.get('sort') || 'newest';
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await api.getProducts();
+        if (response.success) {
+          setProducts(response.data);
+        }
+      } catch (error) {
+        console.error("Fetch products error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [categoryFilter, sizeFilter, colorFilter, searchFilter, sortFilter]);
 
   const filteredProducts = useMemo(() => {
-    let result = [...MOCK_PRODUCTS];
+    let result = [...products];
 
     if (searchFilter) {
       const query = searchFilter.toLowerCase();

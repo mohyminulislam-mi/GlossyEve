@@ -6,10 +6,9 @@ import { motion } from 'motion/react';
 import { ShieldCheck, Truck, CreditCard, ShoppingBag, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { db } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { handleFirestoreError, OperationType } from '@/lib/firestore-errors';
+import ConfirmModal from '@/components/ConfirmModal';
+import AuthPromptModal from '@/components/AuthPromptModal';
 
 const DISTRICTS = [
 { name: 'Dhaka', shipping: 60 },
@@ -24,23 +23,26 @@ const DISTRICTS = [
 
 export default function Checkout() {
   const { cart, totalPrice, clearCart } = useCart();
-  const { user, loginWithGoogle } = useAuth();
+  const { user, loginWithGoogle, signupGuest } = useAuth();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
+    email: '',
     district: 'Dhaka',
     area: '',
     address: '',
     paymentMethod: 'COD'
   });
 
+  const [isGuestMode, setIsGuestMode] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [couponError, setCouponError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(!user && !isGuestMode);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const shippingCost = DISTRICTS.find((d) => d.name === formData.district)?.shipping || 120;
   const discountAmount = totalPrice * appliedDiscount / 100;
@@ -59,17 +61,42 @@ export default function Checkout() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!user) {
-      await loginWithGoogle();
-      return;
-    }
+    setIsModalOpen(true);
+  };
 
+  const handleConfirmOrder = async () => {
     setIsSubmitting(true);
     try {
+      let currentUser = user;
+
+      // Handle Guest Checkout
+      if (!user) {
+        const guestResult = await signupGuest({
+          displayName: formData.fullName,
+          email: formData.email || `guest_${Date.now()}@aura.com`,
+          phone: formData.phone,
+        });
+        
+        if (guestResult.success) {
+          // Re-fetch user from localStorage or just use a mock object for order
+          const savedGuest = JSON.parse(localStorage.getItem('aura_user'));
+          currentUser = savedGuest;
+        } else {
+          throw new Error("Guest signup failed");
+        }
+      }
+
       const orderData = {
-        userId: user.uid,
+        id: `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        user: {
+          uid: currentUser.uid,
+          displayName: currentUser.displayName,
+          email: currentUser.email,
+          phone: currentUser.phone,
+          isGuest: currentUser.isGuest || false
+        },
         items: cart.map((item) => ({
           id: item.id,
           name: item.name,
@@ -80,6 +107,10 @@ export default function Checkout() {
           images: item.images
         })),
         total: grandTotal,
+        subtotal: totalPrice,
+        shipping: shippingCost,
+        discount: discountAmount,
+        paymentMethod: formData.paymentMethod,
         status: 'pending',
         shippingAddress: {
           fullName: formData.fullName,
@@ -88,52 +119,28 @@ export default function Checkout() {
           area: formData.area,
           address: formData.address
         },
-        paymentMethod: formData.paymentMethod,
-        createdAt: serverTimestamp()
+        createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'orders'), orderData);
-      setOrderSuccess(docRef.id);
-      clearCart();
+      // API Call to create order
+      const response = await api.createOrder(orderData);
+      
+      if (response.success) {
+        clearCart();
+        router.push(`/success?orderId=${orderData.id}`);
+      } else {
+        throw new Error(response.message || "Failed to place order");
+      }
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'orders');
+      console.error("Order error:", error);
+      alert(error.message || "Something went wrong while placing your order.");
     } finally {
       setIsSubmitting(false);
+      setIsModalOpen(false);
     }
   };
 
-  if (orderSuccess) {
-    return (
-      <div className="flex h-[80vh] flex-col items-center justify-center space-y-6 px-4 text-center">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-green-600">
-          
-          <CheckCircle2 className="h-12 w-12" />
-        </motion.div>
-        <div className="space-y-2">
-          <h2 className="text-3xl font-serif font-bold text-slate-900">Order Placed Successfully!</h2>
-          <p className="text-slate-500">Your order ID is <span className="font-bold text-slate-900">#{orderSuccess}</span></p>
-          <p className="text-sm text-slate-400 italic">We've sent a confirmation email to your inbox.</p>
-        </div>
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <button
-            onClick={() => router.push('/account')}
-            className="rounded-full bg-brand-rose px-8 py-4 font-bold text-white shadow-lg shadow-brand-rose/20 transition-all hover:bg-rose-500 hover:scale-105 active:scale-95">
-            
-            Track My Order
-          </button>
-          <button
-            onClick={() => router.push('/')}
-            className="rounded-full border-2 border-brand-rose px-8 py-4 font-bold text-brand-rose transition-all hover:bg-brand-pink hover:scale-105 active:scale-95">
-            
-            Back to Home
-          </button>
-        </div>
-      </div>);
 
-  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -144,7 +151,14 @@ export default function Checkout() {
         <ArrowLeft className="h-4 w-4" /> Back to Cart
       </button>
 
-      <h1 className="mb-12 text-4xl font-serif font-bold text-slate-900">Checkout</h1>
+      <div className="flex items-center justify-between mb-12">
+        <h1 className="text-4xl font-serif font-bold text-slate-900">Checkout</h1>
+        {!user && (
+          <span className="rounded-full bg-slate-100 px-4 py-1 text-xs font-bold text-slate-500 uppercase tracking-widest">
+            Guest Checkout
+          </span>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         {/* Shipping Info */}
@@ -177,6 +191,20 @@ export default function Checkout() {
                   placeholder="e.g., 017XXXXXXXX" />
                 
               </div>
+              
+              {!user && (
+                <div className="space-y-2 sm:col-span-2">
+                  <label className="text-sm font-bold uppercase tracking-widest text-slate-700">Email Address (Optional)</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full rounded-xl border-slate-200 bg-slate-50 p-4 outline-none ring-brand-rose/20 transition-all focus:border-brand-rose focus:ring-4"
+                    placeholder="e.g., guest@example.com" />
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 italic">An account will be created automatically for you.</p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-bold uppercase tracking-widest text-slate-700">District</label>
                 <select
@@ -352,6 +380,30 @@ export default function Checkout() {
           </div>
         </div>
       </form>
+
+      <ConfirmModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirmOrder}
+        isSubmitting={isSubmitting}
+        orderSummary={{
+          itemCount: cart.length,
+          subtotal: totalPrice,
+          shipping: shippingCost,
+          discount: discountAmount,
+          total: grandTotal
+        }}
+      />
+
+      <AuthPromptModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onGuestMode={() => {
+          setIsGuestMode(true);
+          setShowAuthModal(false);
+        }}
+        loginWithGoogle={loginWithGoogle}
+      />
     </div>);
 
 }

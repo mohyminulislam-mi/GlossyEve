@@ -1,27 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  setDoc,
-  serverTimestamp,
-  deleteDoc,
-  doc } from
-'firebase/firestore';
 import { Star, MessageSquare, Trash2, Send, User } from 'lucide-react';
-import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import mockReviews from '../data/reviews.json';
 
 
 
 
+
+import { api } from '@/lib/api-client';
 
 export default function ProductReviews({ productId }) {
   const { user, profile, loginWithGoogle } = useAuth();
@@ -32,21 +22,19 @@ export default function ProductReviews({ productId }) {
   const [hoveredRating, setHoveredRating] = useState(0);
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'reviews'),
-      where('productId', '==', productId),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsub = onSnapshot(q, (snapshot) => {
-      setReviews(snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      })));
-    });
-
-    return unsub;
+    fetchReviews();
   }, [productId]);
+
+  const fetchReviews = async () => {
+    try {
+      const response = await api.getReviews({ productId });
+      if (response.success) {
+        setReviews(response.data);
+      }
+    } catch (error) {
+      console.error("Fetch reviews error:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,18 +47,19 @@ export default function ProductReviews({ productId }) {
 
     setIsSubmitting(true);
     try {
-      const newReviewRef = doc(collection(db, 'reviews'));
-      await setDoc(newReviewRef, {
-        id: newReviewRef.id,
+      const response = await api.createReview({
         productId,
-        userId: user.uid,
-        userName: profile.displayName || 'Anonymous',
+        userId: user.id || user.uid,
+        userName: profile.name || profile.displayName || 'Anonymous',
         rating,
-        comment: comment.trim(),
-        createdAt: serverTimestamp()
+        comment: comment.trim()
       });
-      setComment('');
-      setRating(5);
+
+      if (response.success) {
+        setComment('');
+        setRating(5);
+        fetchReviews();
+      }
     } catch (error) {
       console.error('Error adding review:', error);
     } finally {
@@ -81,7 +70,10 @@ export default function ProductReviews({ productId }) {
   const handleDelete = async (reviewId) => {
     if (!window.confirm('Are you sure you want to delete this review?')) return;
     try {
-      await deleteDoc(doc(db, 'reviews', reviewId));
+      const response = await api.deleteReview(reviewId);
+      if (response.success) {
+        fetchReviews();
+      }
     } catch (error) {
       console.error('Error deleting review:', error);
     }
@@ -205,7 +197,7 @@ export default function ProductReviews({ productId }) {
                       )}
                         </div>
                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                          {review.createdAt?.toDate().toLocaleDateString()}
+                          {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>

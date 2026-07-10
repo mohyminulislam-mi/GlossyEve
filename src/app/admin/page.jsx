@@ -1,25 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import {
-  Users,
-  ShoppingBag,
-  Package,
-  TrendingUp,
-  ArrowUpRight,
-  ArrowDownRight,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Ticket } from
-'lucide-react';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '@/firebase';
-
+import { Users, ShoppingBag, Package, TrendingUp, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCircle, AlertCircle, Ticket } from 'lucide-react';
 import { MOCK_PRODUCTS } from '@/constants';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import mockOrders from '@/data/orders.json';
+import mockUsers from '@/data/users.json';
 
 export default function AdminOverview() {
   const [stats, setStats] = useState({
@@ -32,31 +19,19 @@ export default function AdminOverview() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Real-time stats
-    const unsubOrders = onSnapshot(collection(db, 'orders'), (snapshot) => {
-      const orders = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      const revenue = orders.reduce((sum, order) => sum + (order.status !== 'canceled' ? order.total : 0), 0);
-
-      setStats((prev) => ({
-        ...prev,
-        totalOrders: orders.length,
-        totalRevenue: revenue,
-        recentOrders: orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 5)
-      }));
+    const localOrders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
+    const allOrders = [...localOrders, ...mockOrders];
+    
+    const revenue = allOrders.reduce((sum, order) => sum + (order.status !== 'canceled' ? order.total : 0), 0);
+    
+    setStats({
+      totalUsers: mockUsers.length,
+      totalOrders: allOrders.length,
+      totalRevenue: revenue,
+      totalProducts: MOCK_PRODUCTS.length,
+      recentOrders: allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
     });
-
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-      setStats((prev) => ({
-        ...prev,
-        totalUsers: snapshot.size
-      }));
-    });
-
     setLoading(false);
-    return () => {
-      unsubOrders();
-      unsubUsers();
-    };
   }, []);
 
   const statCards = [
@@ -143,7 +118,7 @@ export default function AdminOverview() {
                       </span>
                     </td>
                     <td className="py-4 text-xs text-slate-400">
-                      {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : 'N/A'}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                   </tr>
                 )}

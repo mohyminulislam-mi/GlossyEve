@@ -9,73 +9,105 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 
 
-
-
-
+import { api } from '@/lib/api-client';
 
 const CartContext = createContext(undefined);
 
-export function CartProvider({ children }) {
-  const [cart, setCart] = useState(() => {
-    if (typeof window === 'undefined') return [];
-    const savedCart = localStorage.getItem('aura_cart');
-    return savedCart ? JSON.parse(savedCart) : [];
-  });
+export const CartProvider = ({ children }) => {
+  const [cart, setCart] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // Sync with backend on mount
   useEffect(() => {
-    localStorage.setItem('aura_cart', JSON.stringify(cart));
-  }, [cart]);
-
-  const addToCart = (product, quantity, size, color) => {
-    setCart((prev) => {
-      const existingItemIndex = prev.findIndex(
-        (item) => item.id === product.id && item.selectedSize === size && item.selectedColor === color
-      );
-
-      if (existingItemIndex > -1) {
-        const newCart = [...prev];
-        newCart[existingItemIndex].quantity += quantity;
-        return newCart;
+    const fetchCart = async () => {
+      try {
+        const response = await api.getCart();
+        if (response.success) {
+          setCart(response.data);
+        }
+      } catch (error) {
+        console.error("Cart sync error:", error);
+      } finally {
+        setIsLoaded(true);
       }
+    };
+    fetchCart();
+  }, []);
 
-      return [...prev, { ...product, quantity, selectedSize: size, selectedColor: color }];
-    });
+  const addToCart = async (product, selectedSize, selectedColor) => {
+    try {
+      const response = await api.addToCart({
+        productId: product.id,
+        name: product.name || product.title,
+        price: product.price,
+        selectedSize,
+        selectedColor,
+        images: product.images || [product.image],
+        quantity: 1
+      });
+      if (response.success) {
+        setCart(prev => {
+          const existing = prev.find(item => 
+            item.productId === product.id && 
+            item.selectedSize === selectedSize && 
+            item.selectedColor === selectedColor
+          );
+          if (existing) {
+            return prev.map(item => 
+              item.id === existing.id ? response.data : item
+            );
+          }
+          return [...prev, response.data];
+        });
+      }
+    } catch (error) {
+      console.error("Add to cart error:", error);
+    }
   };
 
-  const removeFromCart = (productId, size, color) => {
-    setCart((prev) => prev.filter(
-      (item) => !(item.id === productId && item.selectedSize === size && item.selectedColor === color)
-    ));
+  const removeFromCart = async (itemId) => {
+    try {
+      const response = await api.removeFromCart(itemId);
+      if (response.success) {
+        setCart(prev => prev.filter(item => item.id !== itemId));
+      }
+    } catch (error) {
+      console.error("Remove from cart error:", error);
+    }
   };
 
-  const updateQuantity = (productId, size, color, quantity) => {
-    if (quantity < 1) return;
-    setCart((prev) => prev.map((item) =>
-    item.id === productId && item.selectedSize === size && item.selectedColor === color ?
-    { ...item, quantity } :
-    item
-    ));
+  const updateQuantity = async (itemId, newQuantity) => {
+    if (newQuantity < 1) return;
+    try {
+      const response = await api.updateCartItem(itemId, newQuantity);
+      if (response.success) {
+        setCart(prev => prev.map(item => 
+          item.id === itemId ? { ...item, quantity: newQuantity } : item
+        ));
+      }
+    } catch (error) {
+      console.error("Update quantity error:", error);
+    }
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = async () => {
+    try {
+      await api.clearCart();
+      setCart([]);
+    } catch (error) {
+      console.error("Clear cart error:", error);
+    }
+  };
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{
-      cart,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      totalItems,
-      totalPrice
-    }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, totalPrice, totalItems, isLoaded }}>
       {children}
-    </CartContext.Provider>);
-
-}
+    </CartContext.Provider>
+  );
+};
 
 export function useCart() {
   const context = useContext(CartContext);

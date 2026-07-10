@@ -7,6 +7,7 @@ import { ShoppingBag, Heart, User, Search, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../hooks/useWishlist';
 
 // Inner component that uses useSearchParams (needs Suspense boundary)
 function NavLinks() {
@@ -32,7 +33,8 @@ function NavLinks() {
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { totalItems } = useCart();
+  const { totalItems, isLoaded: isCartLoaded } = useCart();
+  const { wishlistCount, isLoaded } = useWishlist();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -80,15 +82,20 @@ export default function Navbar() {
             
             <Search className="h-5 w-5" />
           </button>
-          <Link href="/wishlist" className="p-2 text-slate-600 hover:text-brand-rose">
+          <Link href="/wishlist" className="relative p-2 text-slate-600 hover:text-brand-rose">
             <Heart className="h-5 w-5" />
+            {isLoaded && wishlistCount > 0 &&
+            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-rose text-[10px] font-bold text-white">
+                {wishlistCount}
+              </span>
+            }
           </Link>
           <Link href="/account" className="p-2 text-slate-600 hover:text-brand-rose">
             <User className="h-5 w-5" />
           </Link>
           <Link href="/cart" className="relative p-2 text-slate-600 hover:text-brand-rose">
             <ShoppingBag className="h-5 w-5" />
-            {totalItems > 0 &&
+            {isCartLoaded && totalItems > 0 &&
             <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-rose text-[10px] font-bold text-white">
                 {totalItems}
               </span>

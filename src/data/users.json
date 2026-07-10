@@ -1,0 +1,16 @@
+[
+  {
+    "uid": "admin-123",
+    "email": "mohyminulislam2001@gmail.com",
+    "displayName": "Mohyminul Islam",
+    "role": "admin",
+    "createdAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "uid": "cust-456",
+    "email": "customer@example.com",
+    "displayName": "Nusrat Jahan",
+    "role": "customer",
+    "createdAt": "2024-02-15T10:00:00Z"
+  }
+]

@@ -4,29 +4,20 @@ import React from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trash2, ShoppingBag, Heart, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useWishlist } from '@/hooks/useWishlist';
 import { useCart } from '@/context/CartContext';
 import { MOCK_PRODUCTS } from '@/constants';
 
 export default function Wishlist() {
-  const { user, profile, toggleWishlist } = useAuth();
+  const { wishlist, toggleWishlist, isLoaded } = useWishlist();
   const { addToCart } = useCart();
 
   const wishlistProducts = MOCK_PRODUCTS.filter((p) =>
-  profile?.wishlist?.includes(p.id)
+    wishlist.some(item => item.id === p.id)
   );
 
-  if (!user) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-24 text-center sm:px-6 lg:px-8">
-        <Heart className="mx-auto h-16 w-16 text-slate-200" />
-        <h2 className="mt-4 text-2xl font-serif font-bold text-slate-900">Please login to see your wishlist</h2>
-        <p className="mt-2 text-slate-500">Your favorite items are waiting for you.</p>
-        <Link href="/account" className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-brand-rose px-8 py-4 font-bold text-white shadow-lg shadow-brand-rose/20 transition-all hover:bg-rose-500">
-          Login Now <ArrowRight className="h-5 w-5" />
-        </Link>
-      </div>);
-
+  if (!isLoaded) {
+    return <div className="min-h-[60vh] flex items-center justify-center">Loading...</div>;
   }
 
   return (
@@ -58,7 +49,7 @@ export default function Wishlist() {
                 </Link>
 
                 <button
-              onClick={() => toggleWishlist(product.id)}
+              onClick={() => toggleWishlist({ id: product.id })}
               className="absolute right-4 top-4 rounded-full bg-white/80 p-2 text-brand-rose backdrop-blur-sm transition-all hover:bg-white">
               
                   <Trash2 className="h-5 w-5" />

@@ -8,6 +8,7 @@ import { ShoppingCart, Heart, Eye } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../hooks/useWishlist';
 
 
 
@@ -18,9 +19,10 @@ import { useAuth } from '../context/AuthContext';
 export default function ProductCard({ product, className }) {
   const router = useRouter();
   const { addToCart } = useCart();
-  const { toggleWishlist, profile } = useAuth();
+  const { profile } = useAuth();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
-  const isWishlisted = profile?.wishlist?.includes(product.id) || false;
+  const isWishlisted = isInWishlist(product.id);
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -30,7 +32,7 @@ export default function ProductCard({ product, className }) {
 
   const handleWishlist = (e) => {
     e.stopPropagation();
-    toggleWishlist(product.id);
+    toggleWishlist(product);
   };
 
   const handleCardClick = () => {

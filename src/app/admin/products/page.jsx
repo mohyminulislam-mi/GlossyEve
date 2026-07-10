@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Plus,
   Search,
+
   Edit2,
   Trash2,
   Filter,
@@ -27,30 +28,24 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, we'd fetch from Firestore. 
-    // For this demo, we'll initialize Firestore with MOCK_PRODUCTS if empty, 
-    // then listen for changes.
-    const initProducts = async () => {
-      const snapshot = await getDocs(collection(db, 'products'));
-      if (snapshot.empty) {
-        for (const p of MOCK_PRODUCTS) {
-          await addDoc(collection(db, 'products'), p);
-        }
-      }
-    };
-
-    initProducts().then(() => {
-      const unsub = onSnapshot(collection(db, 'products'), (snapshot) => {
-        setProducts(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-        setLoading(false);
-      });
-      return unsub;
-    });
+    fetchProducts();
   }, []);
 
-  const handleDelete = async (id) => {
+  const fetchProducts = () => {
+    const localProducts = JSON.parse(localStorage.getItem('aura_products') || '[]');
+    // Combine mock products with local ones, prioritizing local ones if IDs clash (though they shouldn't)
+    const combined = [...localProducts, ...MOCK_PRODUCTS.filter(mp => !localProducts.some(lp => lp.id === mp.id))];
+    setProducts(combined);
+    setLoading(false);
+  };
+
+  const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      await deleteDoc(doc(db, 'products', id));
+      const localProducts = JSON.parse(localStorage.getItem('aura_products') || '[]');
+      const updatedLocal = localProducts.filter(p => p.id !== id);
+      localStorage.setItem('aura_products', JSON.stringify(updatedLocal));
+      
+      setProducts(prev => prev.filter(p => p.id !== id));
     }
   };
 
@@ -217,14 +212,27 @@ function ProductForm({ product, onClose }) {
     inStock: true
   });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     try {
+      const localProducts = JSON.parse(localStorage.getItem('aura_products') || '[]');
+      
       if (product?.id) {
-        await updateDoc(doc(db, 'products', product.id), formData);
+        // Update
+        const updatedLocal = localProducts.map(p => p.id === product.id ? formData : p);
+        // If not in local yet (it was from MOCK_PRODUCTS), add it to local
+        if (!localProducts.some(p => p.id === product.id)) {
+          updatedLocal.push(formData);
+        }
+        localStorage.setItem('aura_products', JSON.stringify(updatedLocal));
       } else {
-        await addDoc(collection(db, 'products'), formData);
+        // Add new
+        const newProduct = { ...formData, id: `p-${Math.random().toString(36).substr(2, 9)}` };
+        localStorage.setItem('aura_products', JSON.stringify([...localProducts, newProduct]));
       }
+      
+      // Force refresh or just close
+      window.location.reload(); // Simple way to refresh the list
       onClose();
     } catch (error) {
       console.error('Error saving product:', error);

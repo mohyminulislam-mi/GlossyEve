@@ -1,21 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import {
-  Heart,
-  Search,
-
-
-
-  TrendingUp,
-  Eye,
-  ArrowRight } from
-'lucide-react';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '@/firebase';
-
-
-
+import { Heart, Search, TrendingUp, Eye, ArrowRight } from 'lucide-react';
+import { MOCK_PRODUCTS } from '@/constants';
+import mockUsers from '@/data/users.json';
 
 export default function Wishlists() {
   const [users, setUsers] = useState([]);
@@ -24,17 +12,9 @@ export default function Wishlists() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-      setUsers(snapshot.docs.map((doc) => ({ ...doc.data(), uid: doc.id })));
-    });
-    const unsubProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
-      setProducts(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-      setLoading(false);
-    });
-    return () => {
-      unsubUsers();
-      unsubProducts();
-    };
+    setUsers(mockUsers);
+    setProducts(MOCK_PRODUCTS);
+    setLoading(false);
   }, []);
 
   // Calculate popular products
