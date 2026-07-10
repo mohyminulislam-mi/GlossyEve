@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import mockOrders from '@/data/orders.json';
+import mockReviews from '@/data/reviews.json';
 import { MOCK_PRODUCTS } from '@/constants';
 
 export default function Account() {
@@ -46,59 +47,42 @@ export default function Account() {
     }
   }, [user]);
 
-  const fetchUserReviews = async () => {
-    try {
-      const response = await api.getReviews({ userId: user?.id || user?.uid });
-      if (response.success) {
-        setUserReviews(response.data);
-      }
-    } catch (error) {
-      console.error("Fetch reviews error:", error);
-    }
+  const fetchUserReviews = () => {
+    const localReviews = JSON.parse(localStorage.getItem('aura_reviews') || '[]');
+    const allReviews = [...mockReviews, ...localReviews];
+    const filtered = allReviews.filter(r => r.userId === (user?.id || user?.uid));
+    setUserReviews(filtered);
   };
 
-  const handleUpdateReview = async (reviewId, newRating, newComment) => {
-    try {
-      const response = await api.updateReview(reviewId, { rating: newRating, comment: newComment });
-      if (response.success) {
-        fetchUserReviews();
-        setEditingReview(null);
-      }
-    } catch (error) {
-      console.error("Update review error:", error);
-    }
+  const handleUpdateReview = (reviewId, newRating, newComment) => {
+    const localReviews = JSON.parse(localStorage.getItem('aura_reviews') || '[]');
+    const updated = localReviews.map(r => r.id === reviewId ? { ...r, rating: newRating, comment: newComment } : r);
+    localStorage.setItem('aura_reviews', JSON.stringify(updated));
+    fetchUserReviews();
+    setEditingReview(null);
   };
 
-  const handleDeleteReview = async (reviewId) => {
+  const handleDeleteReview = (reviewId) => {
     if (!window.confirm('Delete this review?')) return;
-    try {
-      const response = await api.deleteReview(reviewId);
-      if (response.success) {
-        fetchUserReviews();
-      }
-    } catch (error) {
-      console.error("Delete review error:", error);
-    }
+    const localReviews = JSON.parse(localStorage.getItem('aura_reviews') || '[]');
+    const updated = localReviews.filter(r => r.id !== reviewId);
+    localStorage.setItem('aura_reviews', JSON.stringify(updated));
+    fetchUserReviews();
   };
 
-  const fetchOrders = async () => {
-    try {
-      const response = await api.getUserOrders(user?.id || user?.uid);
-      if (response.success) {
-        setOrders(response.data);
-      }
-    } catch (error) {
-      console.error("Fetch orders error:", error);
-    } finally {
-      setLoading(false);
-    }
+  const fetchOrders = () => {
+    const localOrders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
+    const allOrders = [...localOrders, ...mockOrders];
+    const userOrders = allOrders.filter(o => o.userId === (user?.id || user?.uid));
+    setOrders(userOrders);
+    setLoading(false);
   };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await updateProfile(profileForm);
+      updateProfile(profileForm);
       setIsEditing(false);
     } catch (error) {
       console.error("Profile update error:", error);
@@ -140,7 +124,6 @@ export default function Account() {
           <button onClick={() => router.push('/signup')} className="font-bold text-brand-rose hover:underline">Create an account</button>
         </p>
       </div>);
-
   }
 
   return (
@@ -501,5 +484,4 @@ export default function Account() {
         </div>
       </div>
     </div>);
-
 }

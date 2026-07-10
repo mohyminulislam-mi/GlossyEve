@@ -4,13 +4,54 @@
     "email": "mohyminulislam2001@gmail.com",
     "displayName": "Mohyminul Islam",
     "role": "admin",
-    "createdAt": "2024-01-01T00:00:00Z"
+    "wishlist": ["1", "4", "8"],
+    "phone": "01711223344",
+    "district": "Dhaka",
+    "area": "Dhanmondi",
+    "address": "House 123, Road 45, Block C"
   },
   {
-    "uid": "cust-456",
-    "email": "customer@example.com",
+    "uid": "user-001",
+    "email": "nusrat.jahan@example.com",
     "displayName": "Nusrat Jahan",
     "role": "customer",
-    "createdAt": "2024-02-15T10:00:00Z"
+    "wishlist": ["2", "5"],
+    "phone": "01811223344",
+    "district": "Chittagong",
+    "area": "Khulshi",
+    "address": "Apt 4B, Hill View Residential Area"
+  },
+  {
+    "uid": "user-002",
+    "email": "sadiya.rahman@example.com",
+    "displayName": "Sadiya Rahman",
+    "role": "customer",
+    "wishlist": [],
+    "phone": "01911223344",
+    "district": "Sylhet",
+    "area": "Zindabazar",
+    "address": "House 42, Blue Water Complex"
+  },
+  {
+    "uid": "user-003",
+    "email": "tahmina.akter@example.com",
+    "displayName": "Tahmina Akter",
+    "role": "customer",
+    "wishlist": ["3", "7", "10"],
+    "phone": "01611223344",
+    "district": "Dhaka",
+    "area": "Gulshan",
+    "address": "Road 12, House 5A, Gulshan-1"
+  },
+  {
+    "uid": "user-004",
+    "email": "farhana.khan@example.com",
+    "displayName": "Farhana Khan",
+    "role": "customer",
+    "wishlist": ["1", "6"],
+    "phone": "01511223344",
+    "district": "Rajshahi",
+    "area": "Shaheb Bazar",
+    "address": "Holding 56, Zero Point"
   }
 ]

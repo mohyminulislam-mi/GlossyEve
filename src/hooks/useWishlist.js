@@ -1,53 +1,42 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
-const WISHLIST_KEY = "wishlist";
-
-import { api } from '@/lib/api-client';
+const WISHLIST_KEY = "aura_wishlist";
 
 export const useWishlist = () => {
   const [wishlist, setWishlist] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchWishlist = async () => {
+    const savedWishlist = localStorage.getItem(WISHLIST_KEY);
+    if (savedWishlist) {
       try {
-        const response = await api.getWishlist();
-        if (response.success) {
-          // Map backend data to frontend structure if needed
-          // Assuming backend returns IDs or full objects
-          setWishlist(response.data);
-        }
-      } catch (error) {
-        console.error("Wishlist sync error:", error);
-      } finally {
-        setIsLoaded(true);
+        setWishlist(JSON.parse(savedWishlist));
+      } catch (e) {
+        console.error("Wishlist parse error", e);
       }
-    };
-    fetchWishlist();
+    }
+    setIsLoaded(true);
   }, []);
 
-  const addToWishlist = async (product) => {
-    try {
-      const response = await api.addToWishlist(product.id);
-      if (response.success) {
-        setWishlist(prev => [...prev, product]);
-      }
-    } catch (error) {
-      console.error("Add to wishlist error:", error);
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
     }
+  }, [wishlist, isLoaded]);
+
+  const addToWishlist = async (product) => {
+    setWishlist(prev => {
+      if (!prev.some(item => item.id === product.id)) {
+        return [...prev, product];
+      }
+      return prev;
+    });
   };
 
   const removeFromWishlist = async (productId) => {
-    try {
-      const response = await api.removeFromWishlist(productId);
-      if (response.success) {
-        setWishlist(prev => prev.filter(item => item.id !== productId));
-      }
-    } catch (error) {
-      console.error("Remove from wishlist error:", error);
-    }
+    setWishlist(prev => prev.filter(item => item.id !== productId));
   };
 
   const toggleWishlist = async (product) => {

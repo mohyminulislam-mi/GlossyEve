@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
 import mockUsers from '@/data/users.json';
 
 const AuthContext = createContext(undefined);
@@ -24,8 +23,6 @@ const MOCK_USER = {
   ]
 };
 
-import { api } from '@/lib/api-client';
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -46,62 +43,72 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    try {
-      const response = await api.login({ email, password });
-      if (response.success) {
-        const userData = response.data;
-        setUser(userData);
-        setProfile(userData);
-        localStorage.setItem('aura_user', JSON.stringify(userData));
-        return { success: true };
-      }
-      return { success: false, error: 'Login failed' };
-    } catch (error) {
-      return { success: false, error: error.message };
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Check mock data
+    const allUsers = JSON.parse(localStorage.getItem('aura_users') || '[]');
+    const combinedUsers = [...mockUsers, ...allUsers];
+    
+    const foundUser = combinedUsers.find(u => u.email === email && u.password === password);
+    
+    if (foundUser || email === MOCK_USER.email) {
+      const userData = foundUser || MOCK_USER;
+      setUser(userData);
+      setProfile(userData);
+      localStorage.setItem('aura_user', JSON.stringify(userData));
+      return { success: true };
     }
+    return { success: false, error: 'Invalid credentials' };
   };
 
   const signup = async (userData) => {
-    try {
-      const response = await api.register({ ...userData, isGuest: false });
-      if (response.success) {
-        const newUser = response.data;
-        setUser(newUser);
-        setProfile(newUser);
-        localStorage.setItem('aura_user', JSON.stringify(newUser));
-        return { success: true };
-      }
-      return { success: false, error: 'Signup failed' };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const newUser = {
+      ...userData,
+      uid: 'user-' + Date.now(),
+      role: 'user',
+      wishlist: [],
+      addresses: []
+    };
+    
+    const allUsers = JSON.parse(localStorage.getItem('aura_users') || '[]');
+    allUsers.push(newUser);
+    localStorage.setItem('aura_users', JSON.stringify(allUsers));
+    
+    setUser(newUser);
+    setProfile(newUser);
+    localStorage.setItem('aura_user', JSON.stringify(newUser));
+    return { success: true };
   };
 
   const signupGuest = async (guestData) => {
-    try {
-      const response = await api.register({ ...guestData, isGuest: true, password: 'default@123' });
-      if (response.success) {
-        const newUser = response.data;
-        setUser(newUser);
-        setProfile(newUser);
-        localStorage.setItem('aura_user', JSON.stringify(newUser));
-        return { success: true };
-      }
-      return { success: false, error: 'Guest registration failed' };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const newGuest = {
+      ...guestData,
+      uid: 'guest-' + Date.now(),
+      role: 'guest',
+      isGuest: true,
+      wishlist: [],
+      addresses: []
+    };
+    
+    setUser(newGuest);
+    setProfile(newGuest);
+    localStorage.setItem('aura_user', JSON.stringify(newGuest));
+    return { success: true };
   };
 
   const loginWithGoogle = async () => {
-    // Keep simulation for Google login as backend doesn't support OAuth yet
     setLoading(true);
     await new Promise(resolve => setTimeout(resolve, 800));
     const googleUser = {
-      id: 'google-' + Date.now(),
-      name: 'Google User',
+      uid: 'google-' + Date.now(),
+      displayName: 'Google User',
       email: 'user@gmail.com',
-      isGuest: false
+      role: 'user',
+      wishlist: [],
+      addresses: []
     };
     setUser(googleUser);
     setProfile(googleUser);
@@ -137,7 +144,6 @@ export function AuthProvider({ children }) {
     setUser(updatedProfile);
     localStorage.setItem('aura_user', JSON.stringify(updatedProfile));
     
-    // Also update in aura_users
     const allUsers = JSON.parse(localStorage.getItem('aura_users') || '[]');
     const updatedUsers = allUsers.map(u => u.uid === profile.uid ? updatedProfile : u);
     localStorage.setItem('aura_users', JSON.stringify(updatedUsers));
@@ -158,4 +164,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+}

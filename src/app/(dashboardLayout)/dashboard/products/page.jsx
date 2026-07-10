@@ -13,9 +13,6 @@ import {
   CheckCircle2,
   XCircle } from
 'lucide-react';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/firebase';
-
 import { MOCK_PRODUCTS } from '@/constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';

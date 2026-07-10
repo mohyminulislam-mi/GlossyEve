@@ -2,41 +2,46 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-
-
-
-
-
-
-
-import { api } from '@/lib/api-client';
-
 const CartContext = createContext(undefined);
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Sync with backend on mount
+  // Sync with localStorage on mount
   useEffect(() => {
-    const fetchCart = async () => {
+    const savedCart = localStorage.getItem('aura_cart');
+    if (savedCart) {
       try {
-        const response = await api.getCart();
-        if (response.success) {
-          setCart(response.data);
-        }
-      } catch (error) {
-        console.error("Cart sync error:", error);
-      } finally {
-        setIsLoaded(true);
+        setCart(JSON.parse(savedCart));
+      } catch (e) {
+        console.error("Cart parse error:", e);
       }
-    };
-    fetchCart();
+    }
+    setIsLoaded(true);
   }, []);
 
-  const addToCart = async (product, selectedSize, selectedColor) => {
-    try {
-      const response = await api.addToCart({
+  // Save to localStorage whenever cart changes
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('aura_cart', JSON.stringify(cart));
+    }
+  }, [cart, isLoaded]);
+
+  const addToCart = (product, selectedSize, selectedColor) => {
+    setCart(prev => {
+      const existing = prev.find(item => 
+        item.productId === product.id && 
+        item.selectedSize === selectedSize && 
+        item.selectedColor === selectedColor
+      );
+      if (existing) {
+        return prev.map(item => 
+          item.id === existing.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prev, {
+        id: `cart_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         productId: product.id,
         name: product.name || product.title,
         price: product.price,
@@ -44,59 +49,23 @@ export const CartProvider = ({ children }) => {
         selectedColor,
         images: product.images || [product.image],
         quantity: 1
-      });
-      if (response.success) {
-        setCart(prev => {
-          const existing = prev.find(item => 
-            item.productId === product.id && 
-            item.selectedSize === selectedSize && 
-            item.selectedColor === selectedColor
-          );
-          if (existing) {
-            return prev.map(item => 
-              item.id === existing.id ? response.data : item
-            );
-          }
-          return [...prev, response.data];
-        });
-      }
-    } catch (error) {
-      console.error("Add to cart error:", error);
-    }
+      }];
+    });
   };
 
-  const removeFromCart = async (itemId) => {
-    try {
-      const response = await api.removeFromCart(itemId);
-      if (response.success) {
-        setCart(prev => prev.filter(item => item.id !== itemId));
-      }
-    } catch (error) {
-      console.error("Remove from cart error:", error);
-    }
+  const removeFromCart = (itemId) => {
+    setCart(prev => prev.filter(item => item.id !== itemId));
   };
 
-  const updateQuantity = async (itemId, newQuantity) => {
+  const updateQuantity = (itemId, newQuantity) => {
     if (newQuantity < 1) return;
-    try {
-      const response = await api.updateCartItem(itemId, newQuantity);
-      if (response.success) {
-        setCart(prev => prev.map(item => 
-          item.id === itemId ? { ...item, quantity: newQuantity } : item
-        ));
-      }
-    } catch (error) {
-      console.error("Update quantity error:", error);
-    }
+    setCart(prev => prev.map(item => 
+      item.id === itemId ? { ...item, quantity: newQuantity } : item
+    ));
   };
 
-  const clearCart = async () => {
-    try {
-      await api.clearCart();
-      setCart([]);
-    } catch (error) {
-      console.error("Clear cart error:", error);
-    }
+  const clearCart = () => {
+    setCart([]);
   };
 
   const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);

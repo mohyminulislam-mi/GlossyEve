@@ -3,7 +3,7 @@ export const MOCK_PRODUCTS = [{
   name: 'Silk Lace Bralette',
   price: 1250,
   category: 'Bras',
-  images: ['https://picsum.photos/seed/silk-lace/600/800'],
+  images: ['https://picsum.photos/seed/silk-lace/600/800', 'https://picsum.photos/seed/silk-lace2/600/800'],
   description: 'Elegant silk bralette with delicate lace trim. Perfect for everyday comfort and style.',
   sizes: ['S', 'M', 'L', 'XL'],
   colors: ['Rose Gold', 'Black', 'Cream'],
@@ -41,5 +41,71 @@ export const MOCK_PRODUCTS = [{
   sizes: ['32B', '34B', '36B', '34C'],
   colors: ['Floral Pink', 'Deep Red'],
   sku: 'ST-001',
+  inStock: true
+}, {
+  id: '5',
+  name: 'Everyday T-Shirt Bra',
+  price: 950,
+  category: 'Bras',
+  images: ['https://picsum.photos/seed/tshirt-bra/600/800'],
+  description: 'Seamless and invisible under clothing. Designed for all-day comfort and support.',
+  sizes: ['32A', '32B', '34B', '34C', '36C'],
+  colors: ['Nude', 'Black', 'White'],
+  sku: 'BR-002',
+  inStock: true
+}, {
+  id: '6',
+  name: 'Cotton Pajama Set',
+  price: 2100,
+  category: 'Nightwear',
+  images: ['https://picsum.photos/seed/pajama-set/600/800'],
+  description: 'Cozy two-piece pajama set made from 100% breathable cotton.',
+  sizes: ['S', 'M', 'L', 'XL'],
+  colors: ['Lavender', 'Mint Green'],
+  sku: 'NW-002',
+  inStock: true
+}, {
+  id: '7',
+  name: 'High-Waist Briefs (Pack of 2)',
+  price: 600,
+  category: 'Panties',
+  images: ['https://picsum.photos/seed/briefs/600/800'],
+  description: 'Comfortable high-waisted briefs offering full coverage and a smooth silhouette.',
+  sizes: ['M', 'L', 'XL', 'XXL'],
+  colors: ['Beige', 'Black'],
+  sku: 'PN-002',
+  inStock: true
+}, {
+  id: '8',
+  name: 'Bridal Honeymoon Set',
+  price: 4500,
+  category: 'Sets',
+  images: ['https://picsum.photos/seed/bridal-set/600/800'],
+  description: 'A stunning 3-piece bridal set featuring a robe, slip dress, and matching lingerie.',
+  sizes: ['S', 'M', 'L'],
+  colors: ['Ivory White', 'Blush Pink'],
+  sku: 'ST-002',
+  inStock: true
+}, {
+  id: '9',
+  name: 'Push-Up Plunge Bra',
+  price: 1450,
+  category: 'Bras',
+  images: ['https://picsum.photos/seed/plunge-bra/600/800'],
+  description: 'Enhances cleavage with comfortable padding and underwire support.',
+  sizes: ['32B', '34B', '34C', '36B'],
+  colors: ['Crimson Red', 'Black'],
+  sku: 'BR-003',
+  inStock: false
+}, {
+  id: '10',
+  name: 'Silk Robe',
+  price: 2800,
+  category: 'Nightwear',
+  images: ['https://picsum.photos/seed/silk-robe/600/800'],
+  description: 'Premium silk robe with a tie belt and wide sleeves. Elegance at its finest.',
+  sizes: ['Free Size'],
+  colors: ['Champagne', 'Navy Blue'],
+  sku: 'NW-003',
   inStock: true
 }];

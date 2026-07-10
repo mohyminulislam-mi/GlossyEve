@@ -1,0 +1,42 @@
+[
+  {
+    "id": "c1",
+    "code": "AURA10",
+    "discountType": "percentage",
+    "discountValue": 10,
+    "expirationDate": "2026-12-31",
+    "usageLimit": 100,
+    "usageCount": 45,
+    "isActive": true
+  },
+  {
+    "id": "c2",
+    "code": "WELCOME20",
+    "discountType": "percentage",
+    "discountValue": 20,
+    "expirationDate": "2026-12-31",
+    "usageLimit": 500,
+    "usageCount": 312,
+    "isActive": true
+  },
+  {
+    "id": "c3",
+    "code": "FLAT500",
+    "discountType": "fixed",
+    "discountValue": 500,
+    "expirationDate": "2024-05-01",
+    "usageLimit": 50,
+    "usageCount": 50,
+    "isActive": false
+  },
+  {
+    "id": "c4",
+    "code": "SUMMER15",
+    "discountType": "percentage",
+    "discountValue": 15,
+    "expirationDate": "2026-08-31",
+    "usageLimit": 200,
+    "usageCount": 89,
+    "isActive": true
+  }
+]

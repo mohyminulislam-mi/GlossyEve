@@ -7,12 +7,6 @@ import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import mockReviews from '../data/reviews.json';
 
-
-
-
-
-import { api } from '@/lib/api-client';
-
 export default function ProductReviews({ productId }) {
   const { user, profile, loginWithGoogle } = useAuth();
   const [reviews, setReviews] = useState([]);
@@ -25,15 +19,12 @@ export default function ProductReviews({ productId }) {
     fetchReviews();
   }, [productId]);
 
-  const fetchReviews = async () => {
-    try {
-      const response = await api.getReviews({ productId });
-      if (response.success) {
-        setReviews(response.data);
-      }
-    } catch (error) {
-      console.error("Fetch reviews error:", error);
-    }
+  const fetchReviews = () => {
+    // Combine local storage reviews with mock ones
+    const localReviews = JSON.parse(localStorage.getItem('aura_reviews') || '[]');
+    const allReviews = [...mockReviews, ...localReviews];
+    const productReviews = allReviews.filter(r => r.productId === productId);
+    setReviews(productReviews);
   };
 
   const handleSubmit = async (e) => {
@@ -46,20 +37,28 @@ export default function ProductReviews({ productId }) {
     if (!comment.trim()) return;
 
     setIsSubmitting(true);
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     try {
-      const response = await api.createReview({
+      const newReview = {
+        id: `rev-${Date.now()}`,
         productId,
         userId: user.id || user.uid,
         userName: profile.name || profile.displayName || 'Anonymous',
         rating,
-        comment: comment.trim()
-      });
+        comment: comment.trim(),
+        createdAt: new Date().toISOString()
+      };
 
-      if (response.success) {
-        setComment('');
-        setRating(5);
-        fetchReviews();
-      }
+      const localReviews = JSON.parse(localStorage.getItem('aura_reviews') || '[]');
+      localReviews.push(newReview);
+      localStorage.setItem('aura_reviews', JSON.stringify(localReviews));
+
+      setComment('');
+      setRating(5);
+      fetchReviews();
     } catch (error) {
       console.error('Error adding review:', error);
     } finally {
@@ -70,10 +69,10 @@ export default function ProductReviews({ productId }) {
   const handleDelete = async (reviewId) => {
     if (!window.confirm('Are you sure you want to delete this review?')) return;
     try {
-      const response = await api.deleteReview(reviewId);
-      if (response.success) {
-        fetchReviews();
-      }
+      const localReviews = JSON.parse(localStorage.getItem('aura_reviews') || '[]');
+      const updatedReviews = localReviews.filter(r => r.id !== reviewId);
+      localStorage.setItem('aura_reviews', JSON.stringify(updatedReviews));
+      fetchReviews();
     } catch (error) {
       console.error('Error deleting review:', error);
     }

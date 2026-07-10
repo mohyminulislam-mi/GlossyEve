@@ -1,26 +1,74 @@
 [
   {
-    "id": "rev-1",
-    "productId": "p1",
-    "userName": "Sarah K.",
+    "id": "REV-001",
+    "productId": "1",
+    "userId": "user-001",
+    "userName": "Nusrat Jahan",
     "rating": 5,
-    "comment": "Absolutely love the quality and the fit! Highly recommended.",
-    "createdAt": "2024-03-10T12:00:00Z"
+    "comment": "Absolutely love the silk bralette! It's so comfortable and fits perfectly. The Rose Gold color is stunning.",
+    "createdAt": "2024-02-10T14:30:00Z"
   },
   {
-    "id": "rev-2",
-    "productId": "p1",
-    "userName": "Mila R.",
+    "id": "REV-002",
+    "productId": "1",
+    "userId": "user-002",
+    "userName": "Sadiya Rahman",
     "rating": 4,
-    "comment": "Very comfortable and elegant design.",
-    "createdAt": "2024-03-15T09:30:00Z"
+    "comment": "Good quality and comfortable. Fast delivery to Sylhet.",
+    "createdAt": "2024-02-12T09:15:00Z"
   },
   {
-    "id": "rev-3",
-    "productId": "p2",
-    "userName": "Ayesha A.",
+    "id": "REV-003",
+    "productId": "2",
+    "userId": "user-003",
+    "userName": "Tahmina Akter",
     "rating": 5,
-    "comment": "Perfect fit and very sexy. My husband loved it!",
-    "createdAt": "2024-04-05T20:15:00Z"
+    "comment": "The satin nightgown is so luxurious! I feel like a queen wearing it. Highly recommend Emerald color.",
+    "createdAt": "2024-02-18T16:45:00Z"
+  },
+  {
+    "id": "REV-004",
+    "productId": "3",
+    "userId": "admin-123",
+    "userName": "Mohyminul Islam",
+    "rating": 5,
+    "comment": "Great value for money. Very comfortable for daily use.",
+    "createdAt": "2024-02-20T11:20:00Z"
+  },
+  {
+    "id": "REV-005",
+    "productId": "4",
+    "userId": "user-004",
+    "userName": "Farhana Khan",
+    "rating": 3,
+    "comment": "Beautiful design, but the sizing runs a bit small. I had to exchange for a larger size.",
+    "createdAt": "2024-02-25T10:10:00Z"
+  },
+  {
+    "id": "REV-006",
+    "productId": "6",
+    "userId": "user-001",
+    "userName": "Nusrat Jahan",
+    "rating": 5,
+    "comment": "These pajamas are the coziest thing ever. Highly breathable cotton.",
+    "createdAt": "2024-03-01T15:30:00Z"
+  },
+  {
+    "id": "REV-007",
+    "productId": "8",
+    "userId": "user-003",
+    "userName": "Tahmina Akter",
+    "rating": 5,
+    "comment": "Bought this for my honeymoon. It's exquisite. The ivory white color is pristine.",
+    "createdAt": "2024-03-05T08:45:00Z"
+  },
+  {
+    "id": "REV-008",
+    "productId": "10",
+    "userId": "user-002",
+    "userName": "Sadiya Rahman",
+    "rating": 4,
+    "comment": "Nice silk robe, feels very premium.",
+    "createdAt": "2024-03-06T12:00:00Z"
   }
 ]

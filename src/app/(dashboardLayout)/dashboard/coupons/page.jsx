@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Ticket, Trash2, Edit2, Calendar, Hash, X, CheckCircle2, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import mockCoupons from '@/data/coupons.json';
 
 export default function Coupons() {
   const [coupons, setCoupons] = useState([]);
@@ -17,11 +18,8 @@ export default function Coupons() {
     if (localCoupons) {
       setCoupons(JSON.parse(localCoupons));
     } else {
-      const defaultCoupons = [
-        { id: 'c1', code: 'AURA10', discountType: 'percentage', discountValue: 10, expirationDate: '2024-12-31', usageLimit: 100, usageCount: 5, isActive: true }
-      ];
-      localStorage.setItem('aura_coupons', JSON.stringify(defaultCoupons));
-      setCoupons(defaultCoupons);
+      localStorage.setItem('aura_coupons', JSON.stringify(mockCoupons));
+      setCoupons(mockCoupons);
     }
     setLoading(false);
   }, []);

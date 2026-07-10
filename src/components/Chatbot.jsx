@@ -3,34 +3,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { cn } from '../lib/utils';
-
-const SYSTEM_INSTRUCTION = `You are AURA AI, a helpful and sophisticated personal shopping assistant for AURA, a premium lingerie and nightwear brand in Bangladesh. 
-
-Your personality:
-- Elegant, polite, and professional.
-- Knowledgeable about lingerie styles (Bras, Panties, Nightwear, Sets).
-- Helpful with sizing advice and styling tips.
-- Conversational and engaging.
-
-Your goals:
-- Help customers find the perfect fit and style.
-- Answer questions about AURA's collections.
-- Provide information about shipping (৳120 flat rate, free over ৳5000).
-- Explain the return policy (7-day easy returns).
-- Be discreet and respectful given the nature of the products.
-
-If asked about specific products, mention that we have a wide range of Bras, Panties, and Nightwear in various colors like Rose Gold, Black, and Emerald.
-
-Keep your responses concise and helpful. Use emojis occasionally to maintain a friendly tone. 🌸`;
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
-  { role: 'model', text: 'Hello! I am AURA AI, your personal shopping assistant. How can I help you find the perfect style today? 🌸' }]
-  );
+    { role: 'model', text: 'Hello! I am AURA AI, your personal shopping assistant. How can I help you find the perfect style today? 🌸' }
+  ]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
@@ -50,25 +30,21 @@ export default function Chatbot() {
     setMessages((prev) => [...prev, { role: 'user', text: userMessage }]);
     setIsLoading(true);
 
+    // Simulate network delay and return a mock response
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const chat = ai.chats.create({
-        model: "gemini-3-flash-preview",
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION
-        },
-        history: messages.map((m) => ({
-          role: m.role,
-          parts: [{ text: m.text }]
-        }))
-      });
-
-      const response = await chat.sendMessage({ message: userMessage });
-      const text = response.text;
-
-      if (text) {
-        setMessages((prev) => [...prev, { role: 'model', text }]);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      let responseText = "I'm just a demo chatbot right now! In a real application, I would give you personalized recommendations based on your preferences. 🌸";
+      
+      const lowerInput = userMessage.toLowerCase();
+      if (lowerInput.includes('shipping') || lowerInput.includes('delivery')) {
+        responseText = "We offer a flat shipping rate of ৳120. Shipping is completely free for all orders over ৳5000! 🚚";
+      } else if (lowerInput.includes('return') || lowerInput.includes('exchange')) {
+        responseText = "We have a 7-day easy returns policy. Just ensure the items are unworn and in their original packaging. 📦";
+      } else if (lowerInput.includes('bra') || lowerInput.includes('panty') || lowerInput.includes('nightwear')) {
+        responseText = "We have a beautiful collection! Would you like me to show you our latest arrivals in that category? 💖";
       }
+
+      setMessages((prev) => [...prev, { role: 'model', text: responseText }]);
     } catch (error) {
       console.error('Chatbot error:', error);
       setMessages((prev) => [...prev, { role: 'model', text: "I'm sorry, I'm having a bit of trouble connecting right now. Please try again in a moment! 🙏" }]);
@@ -177,12 +153,12 @@ export default function Chatbot() {
                 </button>
               </div>
               <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                Powered by Gemini AI
+                Mock Demo Chatbot
               </p>
             </div>
           </motion.div>
         }
       </AnimatePresence>
-    </>);
-
+    </>
+  );
 }

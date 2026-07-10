@@ -1,39 +1,195 @@
 [
   {
-    "id": "ORD-001",
+    "id": "ORD-XYZ123ABC",
+    "user": {
+      "uid": "admin-123",
+      "displayName": "Mohyminul Islam",
+      "email": "mohyminulislam2001@gmail.com",
+      "phone": "01711223344"
+    },
     "userId": "admin-123",
-    "total": 4500,
-    "status": "delivered",
-    "paymentMethod": "Online",
-    "createdAt": "2024-04-20T10:30:00Z",
     "items": [
-      { "id": "p1", "name": "Silk Nightgown", "price": 2500, "quantity": 1, "selectedSize": "M", "images": ["/products/p1-1.jpg"] },
-      { "id": "p2", "name": "Lace Bra Set", "price": 2000, "quantity": 1, "selectedSize": "34B", "images": ["/products/p2-1.jpg"] }
+      {
+        "id": "1",
+        "name": "Silk Lace Bralette",
+        "price": 1250,
+        "quantity": 2,
+        "selectedSize": "M",
+        "selectedColor": "Rose Gold",
+        "images": ["https://picsum.photos/seed/silk-lace/600/800"]
+      },
+      {
+        "id": "3",
+        "name": "Lace Trim Panty Set",
+        "price": 850,
+        "quantity": 1,
+        "selectedSize": "M",
+        "selectedColor": "Pastel Mix",
+        "images": ["https://picsum.photos/seed/lace-panty/600/800"]
+      }
     ],
+    "total": 3470,
+    "subtotal": 3350,
+    "shipping": 120,
+    "discount": 0,
+    "paymentMethod": "COD",
+    "status": "delivered",
     "shippingAddress": {
       "fullName": "Mohyminul Islam",
-      "phone": "01700000000",
+      "phone": "01711223344",
       "district": "Dhaka",
       "area": "Dhanmondi",
       "address": "House 123, Road 45"
-    }
+    },
+    "createdAt": "2024-02-15T10:30:00Z"
   },
   {
-    "id": "ORD-002",
-    "userId": "cust-456",
-    "total": 1200,
-    "status": "pending",
-    "paymentMethod": "COD",
-    "createdAt": "2024-04-25T14:45:00Z",
+    "id": "ORD-ABC987XYZ",
+    "user": {
+      "uid": "user-001",
+      "displayName": "Nusrat Jahan",
+      "email": "nusrat.jahan@example.com",
+      "phone": "01811223344"
+    },
+    "userId": "user-001",
     "items": [
-      { "id": "p3", "name": "Cotton Panty Pack", "price": 1200, "quantity": 1, "selectedSize": "L", "images": ["/products/p3-1.jpg"] }
+      {
+        "id": "2",
+        "name": "Satin Nightgown",
+        "price": 2400,
+        "quantity": 1,
+        "selectedSize": "L",
+        "selectedColor": "Emerald",
+        "images": ["https://picsum.photos/seed/satin-night/600/800"]
+      }
     ],
+    "total": 2520,
+    "subtotal": 2400,
+    "shipping": 120,
+    "discount": 0,
+    "paymentMethod": "Online",
+    "status": "shipped",
     "shippingAddress": {
       "fullName": "Nusrat Jahan",
-      "phone": "01800000000",
+      "phone": "01811223344",
       "district": "Chittagong",
-      "area": "GEC",
-      "address": "Apartment 4B, Hill View"
-    }
+      "area": "Khulshi",
+      "address": "Apt 4B"
+    },
+    "createdAt": "2024-03-01T14:20:00Z"
+  },
+  {
+    "id": "ORD-LMN456OPQ",
+    "user": {
+      "uid": "user-002",
+      "displayName": "Sadiya Rahman",
+      "email": "sadiya.rahman@example.com",
+      "phone": "01911223344"
+    },
+    "userId": "user-002",
+    "items": [
+      {
+        "id": "4",
+        "name": "Embroidered Mesh Set",
+        "price": 3200,
+        "quantity": 1,
+        "selectedSize": "34B",
+        "selectedColor": "Deep Red",
+        "images": ["https://picsum.photos/seed/mesh-set/600/800"]
+      },
+      {
+        "id": "6",
+        "name": "Cotton Pajama Set",
+        "price": 2100,
+        "quantity": 1,
+        "selectedSize": "M",
+        "selectedColor": "Lavender",
+        "images": ["https://picsum.photos/seed/pajama-set/600/800"]
+      }
+    ],
+    "total": 5420,
+    "subtotal": 5300,
+    "shipping": 120,
+    "discount": 0,
+    "paymentMethod": "COD",
+    "status": "pending",
+    "shippingAddress": {
+      "fullName": "Sadiya Rahman",
+      "phone": "01911223344",
+      "district": "Sylhet",
+      "area": "Zindabazar",
+      "address": "House 42"
+    },
+    "createdAt": "2024-03-05T09:15:00Z"
+  },
+  {
+    "id": "ORD-DEF123GHI",
+    "user": {
+      "uid": "guest_12345",
+      "displayName": "Guest User",
+      "email": "guest@example.com",
+      "phone": "01511223344"
+    },
+    "userId": "guest_12345",
+    "items": [
+      {
+        "id": "7",
+        "name": "High-Waist Briefs",
+        "price": 600,
+        "quantity": 3,
+        "selectedSize": "L",
+        "selectedColor": "Beige",
+        "images": ["https://picsum.photos/seed/briefs/600/800"]
+      }
+    ],
+    "total": 1920,
+    "subtotal": 1800,
+    "shipping": 120,
+    "discount": 0,
+    "paymentMethod": "Online",
+    "status": "delivered",
+    "shippingAddress": {
+      "fullName": "Guest User",
+      "phone": "01511223344",
+      "district": "Dhaka",
+      "area": "Uttara",
+      "address": "Sector 11"
+    },
+    "createdAt": "2024-01-20T16:45:00Z"
+  },
+  {
+    "id": "ORD-JKL890MNO",
+    "user": {
+      "uid": "user-003",
+      "displayName": "Tahmina Akter",
+      "email": "tahmina.akter@example.com",
+      "phone": "01611223344"
+    },
+    "userId": "user-003",
+    "items": [
+      {
+        "id": "8",
+        "name": "Bridal Honeymoon Set",
+        "price": 4500,
+        "quantity": 1,
+        "selectedSize": "M",
+        "selectedColor": "Ivory White",
+        "images": ["https://picsum.photos/seed/bridal-set/600/800"]
+      }
+    ],
+    "total": 4170,
+    "subtotal": 4500,
+    "shipping": 120,
+    "discount": 450,
+    "paymentMethod": "Online",
+    "status": "pending",
+    "shippingAddress": {
+      "fullName": "Tahmina Akter",
+      "phone": "01611223344",
+      "district": "Dhaka",
+      "area": "Gulshan",
+      "address": "Road 12"
+    },
+    "createdAt": "2024-03-08T11:20:00Z"
   }
 ]

@@ -122,15 +122,15 @@ export default function Checkout() {
         createdAt: new Date().toISOString()
       };
 
-      // API Call to create order
-      const response = await api.createOrder(orderData);
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      if (response.success) {
-        clearCart();
-        router.push(`/success?orderId=${orderData.id}`);
-      } else {
-        throw new Error(response.message || "Failed to place order");
-      }
+      const localOrders = JSON.parse(localStorage.getItem('aura_orders') || '[]');
+      localOrders.push(orderData);
+      localStorage.setItem('aura_orders', JSON.stringify(localOrders));
+      
+      clearCart();
+      router.push(`/success?orderId=${orderData.id}`);
     } catch (error) {
       console.error("Order error:", error);
       alert(error.message || "Something went wrong while placing your order.");
