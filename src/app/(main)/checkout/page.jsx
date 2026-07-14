@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import ConfirmModal from '@/components/ConfirmModal';
 import AuthPromptModal from '@/components/AuthPromptModal';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 const DISTRICTS = [
 { name: 'Dhaka', shipping: 60 },
@@ -143,7 +144,8 @@ export default function Checkout() {
 
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <ProtectedRoute>
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <button
         onClick={() => router.push('/cart')}
         className="mb-8 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-brand-rose">
@@ -404,6 +406,7 @@ export default function Checkout() {
         }}
         loginWithGoogle={loginWithGoogle}
       />
-    </div>);
+      </div>
+    </ProtectedRoute>);
 
 }

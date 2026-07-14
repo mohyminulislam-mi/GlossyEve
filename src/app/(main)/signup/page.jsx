@@ -21,15 +21,34 @@ export default function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setIsSubmitting(false);
+    // Name validation
+    if (formData.displayName.trim().length < 2) {
+      setError('Please enter your full name.');
       return;
     }
-    
+
+    // Email regex validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    // Password length validation
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    // Confirm password validation
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setIsSubmitting(true);
     const result = await signup({
       displayName: formData.displayName,
       email: formData.email,
@@ -122,16 +141,27 @@ export default function Signup() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Confirm Password</label>
             <div className="relative">
-              <CheckCircle2 className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <CheckCircle2 className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transition-colors ${
+                formData.confirmPassword && formData.password !== formData.confirmPassword 
+                  ? 'text-rose-400' 
+                  : 'text-slate-400'
+              }`} />
               <input
                 type="password"
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 placeholder="••••••••"
-                className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 py-4 pl-12 pr-4 text-sm font-bold outline-none focus:border-brand-rose focus:bg-white transition-all"
+                className={`w-full rounded-2xl border-2 py-4 pl-12 pr-4 text-sm font-bold outline-none transition-all ${
+                  formData.confirmPassword && formData.password !== formData.confirmPassword
+                    ? 'border-rose-200 bg-rose-50/20 focus:border-rose-400 focus:bg-white'
+                    : 'border-slate-50 bg-slate-50 focus:border-brand-rose focus:bg-white'
+                }`}
               />
             </div>
+            {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+              <p className="text-xs font-bold text-rose-500 ml-1">Passwords do not match</p>
+            )}
           </div>
 
           <button

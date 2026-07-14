@@ -20,6 +20,7 @@ import {
 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 const NAV_ITEMS = [
 { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
@@ -44,7 +45,8 @@ export default function AdminLayout({ children }) {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <ProtectedRoute allowedRoles={['admin', 'manager']}>
+      <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar Overlay */}
       {isSidebarOpen &&
       <div
@@ -146,6 +148,6 @@ export default function AdminLayout({ children }) {
           {children}
         </main>
       </div>
-    </div>);
-
+    </div>
+  </ProtectedRoute>);
 }
