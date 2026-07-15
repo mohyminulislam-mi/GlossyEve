@@ -90,7 +90,7 @@ export function AuthProvider({ children }) {
       const normalized = normalizeUser(data.user);
       setUser(normalized);
       setProfile(normalized);
-      return { success: true };
+      return { success: true, role: normalized.role };
     } catch (error) {
       return { success: false, error: error.message };
     }

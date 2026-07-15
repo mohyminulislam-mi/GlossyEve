@@ -35,7 +35,12 @@ export default function Login() {
     setIsSubmitting(true);
     const result = await login(email, password);
     if (result.success) {
-      router.push('/account');
+      // Redirect admin/manager to dashboard, regular users to account
+      if (result.role === 'admin' || result.role === 'manager') {
+        router.push('/dashboard');
+      } else {
+        router.push('/account');
+      }
     } else {
       setError(result.error);
     }
