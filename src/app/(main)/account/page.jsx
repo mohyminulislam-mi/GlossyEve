@@ -9,9 +9,10 @@ import { cn } from '@/lib/utils';
 import mockOrders from '@/data/orders.json';
 import mockReviews from '@/data/reviews.json';
 import { MOCK_PRODUCTS } from '@/constants';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function Account() {
-  const { user, profile, logout, loginWithGoogle, updateProfile } = useAuth();
+  const { user, profile, logout, loginWithGoogle, updateProfile, loading: authLoading } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -91,44 +92,19 @@ export default function Account() {
     }
   };
 
-  if (!user) {
+  // Wait for session check before deciding to redirect
+  if (authLoading || !user) {
     return (
-      <div className="flex h-[70vh] flex-col items-center justify-center space-y-8 px-4 text-center">
-        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-brand-pink text-brand-rose">
-          <UserIcon className="h-12 w-12" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-4xl font-serif font-bold text-slate-900">Your AURA Awaits</h2>
-          <p className="mx-auto max-w-sm text-slate-500">Sign in to track your orders, manage your wishlist, and experience the best of AURA.</p>
-        </div>
-        
-        <div className="flex w-full max-w-xs flex-col gap-4">
-          <button
-            onClick={() => router.push('/login')}
-            className="w-full rounded-2xl bg-brand-rose py-4 font-bold text-white shadow-lg shadow-brand-rose/20 transition-all hover:bg-rose-500 hover:scale-105 active:scale-95"
-          >
-            Sign In with Email
-          </button>
-          
-          <button
-            onClick={loginWithGoogle}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-slate-100 bg-white py-4 font-bold text-slate-600 transition-all hover:border-brand-rose hover:text-brand-rose active:scale-[0.98]"
-          >
-            <Chrome className="h-5 w-5" />
-            Google Account
-          </button>
-        </div>
-
-        <p className="text-sm font-medium text-slate-500">
-          New to AURA?{' '}
-          <button onClick={() => router.push('/signup')} className="font-bold text-brand-rose hover:underline">Create an account</button>
-        </p>
-      </div>);
+      <ProtectedRoute>
+        <></>
+      </ProtectedRoute>
+    );
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-12 lg:flex-row">
+    <ProtectedRoute>
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-12 lg:flex-row">
         {/* Sidebar */}
         <aside className="w-full lg:w-64 space-y-4">
           <div className="rounded-3xl bg-white p-8 shadow-sm text-center">
@@ -483,5 +459,6 @@ export default function Account() {
 
         </div>
       </div>
-    </div>);
+    </div>
+  </ProtectedRoute>);
 }

@@ -17,9 +17,22 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError('');
     
+    // Email regex validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    // Password length validation
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    setIsSubmitting(true);
     const result = await login(email, password);
     if (result.success) {
       router.push('/account');
@@ -77,7 +90,7 @@ export default function Login() {
           <div className="space-y-2">
             <div className="flex items-center justify-between ml-1">
               <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Password</label>
-              <Link href="#" className="text-xs font-bold text-brand-rose hover:underline">Forgot password?</Link>
+              <Link href="/forgot-password" className="text-xs font-bold text-brand-rose hover:underline">Forgot password?</Link>
             </div>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />

@@ -1,125 +1,190 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import mockUsers from '@/data/users.json';
+import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext(undefined);
 
-const MOCK_USER = {
-  uid: 'admin-123',
-  email: 'mohyminulislam2001@gmail.com',
-  displayName: 'Mohyminul Islam',
-  role: 'admin',
-  wishlist: [],
-  addresses: [
-    {
-      id: 'addr-1',
-      fullName: 'Mohyminul Islam',
-      phone: '01700000000',
-      district: 'Dhaka',
-      area: 'Dhanmondi',
-      address: 'House 123, Road 45'
+// Helper function to normalize backend user to match frontend property names
+const normalizeUser = (backendUser) => {
+  if (!backendUser) return null;
+
+  // Format backend address object to string
+  let addressString = '';
+  if (backendUser.address) {
+    if (typeof backendUser.address === 'string') {
+      addressString = backendUser.address;
+    } else {
+      const parts = [
+        backendUser.address.street,
+        backendUser.address.city,
+        backendUser.address.postalCode,
+        backendUser.address.country
+      ].filter(Boolean);
+      addressString = parts.join(', ');
     }
-  ]
+  }
+
+  return {
+    uid: backendUser.id || backendUser._id,
+    id: backendUser.id || backendUser._id,
+    displayName: backendUser.name || backendUser.displayName || '',
+    email: backendUser.email || '',
+    role: backendUser.role || 'customer',
+    phone: backendUser.phone || '',
+    address: addressString,
+    wishlist: backendUser.wishlist || [],
+    avatar: backendUser.avatar || '',
+    investmentAmount: backendUser.investmentAmount || 0
+  };
 };
 
 export function AuthProvider({ children }) {
+  const router = useRouter();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('aura_user');
-    if (savedUser) {
+    const checkSession = async () => {
       try {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        setProfile(parsedUser);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.user) {
+          const normalized = normalizeUser(data.user);
+          setUser(normalized);
+          setProfile(normalized);
+        } else {
+          setUser(null);
+          setProfile(null);
+        }
       } catch (e) {
-        localStorage.removeItem('aura_user');
+        setUser(null);
+        setProfile(null);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+    checkSession();
   }, []);
 
   const login = async (email, password) => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Check mock data
-    const allUsers = JSON.parse(localStorage.getItem('aura_users') || '[]');
-    const combinedUsers = [...mockUsers, ...allUsers];
-    
-    const foundUser = combinedUsers.find(u => u.email === email && u.password === password);
-    
-    if (foundUser || email === MOCK_USER.email) {
-      const userData = foundUser || MOCK_USER;
-      setUser(userData);
-      setProfile(userData);
-      localStorage.setItem('aura_user', JSON.stringify(userData));
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
+
+      const normalized = normalizeUser(data.user);
+      setUser(normalized);
+      setProfile(normalized);
       return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
-    return { success: false, error: 'Invalid credentials' };
   };
 
   const signup = async (userData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const newUser = {
-      ...userData,
-      uid: 'user-' + Date.now(),
-      role: 'user',
-      wishlist: [],
-      addresses: []
-    };
-    
-    const allUsers = JSON.parse(localStorage.getItem('aura_users') || '[]');
-    allUsers.push(newUser);
-    localStorage.setItem('aura_users', JSON.stringify(allUsers));
-    
-    setUser(newUser);
-    setProfile(newUser);
-    localStorage.setItem('aura_user', JSON.stringify(newUser));
-    return { success: true };
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: userData.displayName,
+          email: userData.email,
+          password: userData.password,
+          phone: userData.phone || ''
+        }),
+        credentials: 'include'
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      const normalized = normalizeUser(data.user);
+      setUser(normalized);
+      setProfile(normalized);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   };
 
   const signupGuest = async (guestData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
     const newGuest = {
       ...guestData,
       uid: 'guest-' + Date.now(),
+      id: 'guest-' + Date.now(),
       role: 'guest',
       isGuest: true,
       wishlist: [],
-      addresses: []
+      address: ''
     };
-    
     setUser(newGuest);
     setProfile(newGuest);
-    localStorage.setItem('aura_user', JSON.stringify(newGuest));
     return { success: true };
   };
 
   const loginWithGoogle = async () => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    const googleUser = {
-      uid: 'google-' + Date.now(),
-      displayName: 'Google User',
-      email: 'user@gmail.com',
-      role: 'user',
-      wishlist: [],
-      addresses: []
-    };
-    setUser(googleUser);
-    setProfile(googleUser);
-    localStorage.setItem('aura_user', JSON.stringify(googleUser));
-    setLoading(false);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: 'user@gmail.com',
+          name: 'Google User',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+          googleId: 'google-' + Date.now()
+        }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Google Login failed');
+      }
+
+      const normalized = normalizeUser(data.user);
+      setUser(normalized);
+      setProfile(normalized);
+    } catch (error) {
+      console.error("Google login error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setProfile(null);
-    localStorage.removeItem('aura_user');
+  const logout = async () => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (e) {
+      console.error("Logout error:", e);
+    } finally {
+      setUser(null);
+      setProfile(null);
+      router.push('/login');
+    }
   };
 
   const toggleWishlist = async (productId) => {
@@ -135,18 +200,45 @@ export function AuthProvider({ children }) {
     const updatedProfile = { ...profile, wishlist: newWishlist };
     setProfile(updatedProfile);
     setUser(updatedProfile);
-    localStorage.setItem('aura_user', JSON.stringify(updatedProfile));
   };
 
-  const updateProfile = (newData) => {
-    const updatedProfile = { ...profile, ...newData };
-    setProfile(updatedProfile);
-    setUser(updatedProfile);
-    localStorage.setItem('aura_user', JSON.stringify(updatedProfile));
-    
-    const allUsers = JSON.parse(localStorage.getItem('aura_users') || '[]');
-    const updatedUsers = allUsers.map(u => u.uid === profile.uid ? updatedProfile : u);
-    localStorage.setItem('aura_users', JSON.stringify(updatedUsers));
+  const updateProfile = async (newData) => {
+    try {
+      const body = {
+        name: newData.displayName || newData.name,
+        phone: newData.phone || '',
+      };
+
+      if (newData.address !== undefined) {
+        body.address = {
+          street: newData.address,
+          city: '',
+          postalCode: '',
+          country: ''
+        };
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body),
+        credentials: 'include'
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Profile update failed');
+      }
+
+      const updatedUser = normalizeUser(data.user);
+      setUser(updatedUser);
+      setProfile(updatedUser);
+      return { success: true };
+    } catch (error) {
+      throw new Error(error.message);
+    }
   };
 
   const isAdmin = profile?.role === 'admin';
