@@ -82,7 +82,6 @@ export default function CreateProductPage() {
     loadCategories();
   }, []);
 
-
   useEffect(() => {
     if (!nameValue) {
       setValue("slug", "", { shouldDirty: true });

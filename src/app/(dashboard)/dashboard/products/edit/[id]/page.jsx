@@ -95,7 +95,7 @@ export default function EditProductPage() {
 
         setValue("name", product.name || "");
         setValue("slug", product.slug || "");
-        setValue("brand", product.brand || "");
+        setValue("brand", product.brand?.name || (typeof product.brand === "string" ? product.brand : "") || "");
         setValue("sku", product.sku || "");
         setValue("category", product.category?._id || product.category?.id || product.category || "");
         setValue("description", product.description || "");
