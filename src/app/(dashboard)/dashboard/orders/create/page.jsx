@@ -17,7 +17,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useAuth } from "@/app/(mainLayout)/provider/AuthProvider";
+import { useAuth } from "@/context/AuthContext";
 import RoleGuard from "@/components/dashboard/RoleGuard";
 import { getProducts, createManagerOrder } from "@/lib/api";
 import { DIVISIONS, DISTRICTS } from "@/lib/bangladeshData";

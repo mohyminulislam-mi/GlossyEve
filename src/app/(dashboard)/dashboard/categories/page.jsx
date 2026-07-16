@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import { ImagePlus, Loader2, PencilLine, Trash2, UploadCloud, X } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import RoleGuard from "@/components/dashboard/RoleGuard";
 import { createCategory, deleteCategory, getCategories, updateCategory } from "@/lib/api";
 

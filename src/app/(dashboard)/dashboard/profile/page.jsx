@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import { Loader2, User } from "lucide-react";
-import { useAuth } from "@/app/(mainLayout)/provider/AuthProvider";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ProfilePage() {
   const { user, loading: authLoading, updateUser } = useAuth();

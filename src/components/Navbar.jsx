@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../hooks/useWishlist';
+import { useAuth } from '../context/AuthContext';
 
 // Inner component that uses useSearchParams (needs Suspense boundary)
 function NavLinks() {
@@ -35,6 +36,7 @@ export default function Navbar() {
   const router = useRouter();
   const { totalItems, isLoaded: isCartLoaded } = useCart();
   const { wishlistCount, isLoaded } = useWishlist();
+  const { user } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -90,7 +92,7 @@ export default function Navbar() {
               </span>
             }
           </Link>
-          <Link href="/account" className="p-2 text-slate-600 hover:text-brand-rose">
+          <Link href={user && (user.role === 'admin' || user.role === 'manager') ? "/dashboard" : "/account"} className="p-2 text-slate-600 hover:text-brand-rose">
             <User className="h-5 w-5" />
           </Link>
           <Link href="/cart" className="relative p-2 text-slate-600 hover:text-brand-rose">

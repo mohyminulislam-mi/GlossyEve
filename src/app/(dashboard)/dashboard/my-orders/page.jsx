@@ -15,7 +15,7 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
-import { useAuth } from "@/app/(mainLayout)/provider/AuthProvider";
+import { useAuth } from "@/context/AuthContext";
 import { getMyOrders } from "@/lib/api";
 
 const StatusBadge = ({ status }) => {

@@ -18,7 +18,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import RoleGuard from "@/components/dashboard/RoleGuard";
-import { useAuth } from "@/app/(mainLayout)/provider/AuthProvider";
+import { useAuth } from "@/context/AuthContext";
 import { getAllUsers, getUserDetail } from "@/lib/api";
 
 const StatusBadge = ({ status }) => {

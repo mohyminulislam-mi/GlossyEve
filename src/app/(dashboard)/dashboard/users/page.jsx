@@ -13,7 +13,7 @@ import {
   User,
 } from "lucide-react";
 import RoleGuard from "@/components/dashboard/RoleGuard";
-import { useAuth } from "@/app/(mainLayout)/provider/AuthProvider";
+import { useAuth } from "@/context/AuthContext";
 import { getAllUsers, getUserDetail, updateUserRole } from "@/lib/api";
 
 const RoleBadge = ({ role }) => {
