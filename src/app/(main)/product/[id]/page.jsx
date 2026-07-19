@@ -12,52 +12,6 @@ import SizeCalculator from '@/components/SizeCalculator';
 import ProductReviews from '@/components/ProductReviews';
 import { cn } from '@/lib/utils';
 
-const productsData = [{
-  id: '1',
-  name: 'Silk Lace Bralette',
-  price: 1250,
-  category: 'Bras',
-  images: ['https://picsum.photos/seed/silk-lace/600/800'],
-  description: 'Elegant silk bralette with delicate lace trim. Perfect for everyday comfort and style.',
-  sizes: ['S', 'M', 'L', 'XL'],
-  colors: ['Rose Gold', 'Black', 'Cream'],
-  sku: 'BR-001',
-  inStock: true
-}, {
-  id: '2',
-  name: 'Satin Nightgown',
-  price: 2400,
-  category: 'Nightwear',
-  images: ['https://picsum.photos/seed/satin-night/600/800'],
-  description: 'Luxurious satin nightgown with adjustable straps. Soft on the skin for a peaceful sleep.',
-  sizes: ['M', 'L', 'XL'],
-  colors: ['Midnight Blue', 'Emerald', 'Burgundy'],
-  sku: 'NW-001',
-  inStock: true
-}, {
-  id: '3',
-  name: 'Lace Trim Panty Set',
-  price: 850,
-  category: 'Panties',
-  images: ['https://picsum.photos/seed/lace-panty/600/800'],
-  description: 'Set of 3 cotton panties with elegant lace trim. Breathable and stylish.',
-  sizes: ['S', 'M', 'L'],
-  colors: ['Pastel Mix', 'Classic Black'],
-  sku: 'PN-001',
-  inStock: true
-}, {
-  id: '4',
-  name: 'Embroidered Mesh Set',
-  price: 3200,
-  category: 'Sets',
-  images: ['https://picsum.photos/seed/mesh-set/600/800'],
-  description: 'Exquisite embroidered mesh bra and panty set. Designed for special occasions.',
-  sizes: ['32B', '34B', '36B', '34C'],
-  colors: ['Floral Pink', 'Deep Red'],
-  sku: 'ST-001',
-  inStock: true
-}];
-
 export default function ProductDetail() {
   const params = useParams();
   const id = params?.id;
@@ -66,20 +20,64 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isSizeCalcOpen, setIsSizeCalcOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
 
-  const product = productsData.find((p) => p.id === id);
-
   useEffect(() => {
-    if (product) {
-      if (product.sizes.length > 0) setSelectedSize(product.sizes[0]);
-      if (product.colors.length > 0) setSelectedColor(product.colors[0]);
-    }
-  }, [product]);
+    if (!id) return;
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+    setLoading(true);
+    fetch(`${API_URL}/api/products/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.product) {
+          const fetchedProduct = data.product;
+          const normalized = {
+            ...fetchedProduct,
+            id: fetchedProduct._id || fetchedProduct.id,
+            price: fetchedProduct.discountPrice || fetchedProduct.price,
+            originalPrice: fetchedProduct.discountPrice ? fetchedProduct.price : null,
+            images: fetchedProduct.images && fetchedProduct.images.length 
+              ? fetchedProduct.images 
+              : (fetchedProduct.image_url ? [fetchedProduct.image_url] : ['https://picsum.photos/seed/placeholder/600/800']),
+            category: typeof fetchedProduct.category === 'object' && fetchedProduct.category !== null 
+              ? fetchedProduct.category.name 
+              : fetchedProduct.category,
+            sizes: fetchedProduct.sizes || [],
+            colors: fetchedProduct.colors || [],
+            inStock: fetchedProduct.inStock !== undefined 
+              ? fetchedProduct.inStock 
+              : (fetchedProduct.stock !== undefined ? fetchedProduct.stock > 0 : true),
+          };
+          setProduct(normalized);
+
+          if (normalized.sizes.length > 0) setSelectedSize(normalized.sizes[0]);
+          if (normalized.colors.length > 0) setSelectedColor(normalized.colors[0]);
+        } else {
+          setProduct(null);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching product:', err);
+        setProduct(null);
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-rose border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -88,8 +86,8 @@ export default function ProductDetail() {
         <button onClick={() => router.push('/shop')} className="text-brand-rose hover:underline">
           Back to Shop
         </button>
-      </div>);
-
+      </div>
+    );
   }
 
   const isWishlisted = isInWishlist(product.id);
@@ -149,7 +147,12 @@ export default function ProductDetail() {
           <div>
             <p className="text-sm font-bold uppercase tracking-widest text-brand-rose">{product.category}</p>
             <h1 className="mt-2 text-4xl font-serif font-bold text-slate-900 sm:text-5xl">{product.name}</h1>
-            <p className="mt-4 text-3xl font-bold text-brand-rose">৳{product.price.toLocaleString()}</p>
+            <div className="mt-4 flex items-baseline gap-4">
+              <p className="text-3xl font-bold text-brand-rose">৳{product.price.toLocaleString()}</p>
+              {product.originalPrice && (
+                <p className="text-lg text-slate-400 line-through">৳{product.originalPrice.toLocaleString()}</p>
+              )}
+            </div>
             <p className="mt-2 text-xs text-slate-400 uppercase tracking-widest">SKU: {product.sku}</p>
           </div>
 

@@ -7,53 +7,6 @@ import { Filter, X, ChevronDown, SlidersHorizontal, ChevronLeft, ChevronRight } 
 import ProductCard from '@/components/ProductCard';
 import { cn } from '@/lib/utils';
 
-const productsData = [{
-  id: '1',
-  name: 'Silk Lace Bralette',
-  price: 1250,
-  category: 'Bras',
-  images: ['https://picsum.photos/seed/silk-lace/600/800'],
-  description: 'Elegant silk bralette with delicate lace trim. Perfect for everyday comfort and style.',
-  sizes: ['S', 'M', 'L', 'XL'],
-  colors: ['Rose Gold', 'Black', 'Cream'],
-  sku: 'BR-001',
-  inStock: true
-}, {
-  id: '2',
-  name: 'Satin Nightgown',
-  price: 2400,
-  category: 'Nightwear',
-  images: ['https://picsum.photos/seed/satin-night/600/800'],
-  description: 'Luxurious satin nightgown with adjustable straps. Soft on the skin for a peaceful sleep.',
-  sizes: ['M', 'L', 'XL'],
-  colors: ['Midnight Blue', 'Emerald', 'Burgundy'],
-  sku: 'NW-001',
-  inStock: true
-}, {
-  id: '3',
-  name: 'Lace Trim Panty Set',
-  price: 850,
-  category: 'Panties',
-  images: ['https://picsum.photos/seed/lace-panty/600/800'],
-  description: 'Set of 3 cotton panties with elegant lace trim. Breathable and stylish.',
-  sizes: ['S', 'M', 'L'],
-  colors: ['Pastel Mix', 'Classic Black'],
-  sku: 'PN-001',
-  inStock: true
-}, {
-  id: '4',
-  name: 'Embroidered Mesh Set',
-  price: 3200,
-  category: 'Sets',
-  images: ['https://picsum.photos/seed/mesh-set/600/800'],
-  description: 'Exquisite embroidered mesh bra and panty set. Designed for special occasions.',
-  sizes: ['32B', '34B', '36B', '34C'],
-  colors: ['Floral Pink', 'Deep Red'],
-  sku: 'ST-001',
-  inStock: true
-}];
-
-const CATEGORIES = ['Bras', 'Panties', 'Nightwear', 'Sets'];
 const SIZES = ['S', 'M', 'L', 'XL', '32B', '34B', '36B', '34C'];
 const COLORS = ['Rose Gold', 'Black', 'Cream', 'Midnight Blue', 'Emerald', 'Burgundy', 'Floral Pink', 'Deep Red'];
 const ITEMS_PER_PAGE = 12;
@@ -64,6 +17,7 @@ function ShopContent() {
   const searchParams = useSearchParams();
 
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,12 +29,46 @@ function ShopContent() {
   const sortFilter = searchParams.get('sort') || 'newest';
 
   useEffect(() => {
-    // Simulate network delay
-    const timer = setTimeout(() => {
-      setProducts(productsData);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    setLoading(true);
+
+    Promise.all([
+      fetch(`${API_URL}/api/products?limit=100`).then((res) => res.json()),
+      fetch(`${API_URL}/api/categories`).then((res) => res.json())
+    ])
+      .then(([productsData, categoriesData]) => {
+        if (productsData.success && productsData.products) {
+          const normalized = productsData.products.map(p => ({
+            ...p,
+            id: p._id || p.id,
+            price: p.discountPrice || p.price,
+            originalPrice: p.discountPrice ? p.price : null,
+            images: p.images && p.images.length 
+              ? p.images 
+              : (p.image_url ? [p.image_url] : ['https://picsum.photos/seed/placeholder/600/800']),
+            category: typeof p.category === 'object' && p.category !== null 
+              ? p.category.name 
+              : p.category,
+            sizes: p.sizes || [],
+            colors: p.colors || [],
+            inStock: p.inStock !== undefined 
+              ? p.inStock 
+              : (p.stock !== undefined ? p.stock > 0 : true),
+          }));
+          setProducts(normalized);
+        }
+
+        if (categoriesData.success && categoriesData.categories) {
+          setCategories(categoriesData.categories);
+        } else {
+          setCategories([]);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching shop data:', err);
+        setLoading(false);
+      });
   }, []);
 
   // Reset to page 1 when filters change
@@ -93,20 +81,35 @@ function ShopContent() {
 
     if (searchFilter) {
       const query = searchFilter.toLowerCase();
-      result = result.filter((p) =>
-      p.name.toLowerCase().includes(query) ||
-      p.category.toLowerCase().includes(query) ||
-      p.description.toLowerCase().includes(query)
-      );
+      result = result.filter((p) => {
+        const catName = typeof p.category === 'object' && p.category !== null
+          ? p.category.name
+          : (p.category || '');
+        return (
+          p.name.toLowerCase().includes(query) ||
+          String(catName).toLowerCase().includes(query) ||
+          (p.description || '').toLowerCase().includes(query)
+        );
+      });
     }
+
     if (categoryFilter) {
-      result = result.filter((p) => p.category === categoryFilter);
+      result = result.filter((p) => {
+        // p.category is already normalized to a string name in the useEffect below
+        const slug = String(p.category || '')
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+        return slug === categoryFilter;
+      });
     }
+
     if (sizeFilter) {
-      result = result.filter((p) => p.sizes.includes(sizeFilter));
+      result = result.filter((p) => Array.isArray(p.sizes) && p.sizes.includes(sizeFilter));
     }
     if (colorFilter) {
-      result = result.filter((p) => p.colors.includes(colorFilter));
+      result = result.filter((p) => Array.isArray(p.colors) && p.colors.includes(colorFilter));
     }
 
     if (sortFilter === 'price-low') {
@@ -116,7 +119,7 @@ function ShopContent() {
     }
 
     return result;
-  }, [categoryFilter, sizeFilter, colorFilter, sortFilter, searchFilter]);
+  }, [products, categoryFilter, sizeFilter, colorFilter, sortFilter, searchFilter]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = filteredProducts.slice(
@@ -138,6 +141,28 @@ function ShopContent() {
     router.replace(pathname);
   };
 
+  // Resolve category slug → display name
+  const activeCategoryName = useMemo(() => {
+    if (!categoryFilter) return null;
+    const match = categories.find(
+      (c) => (typeof c === 'object' ? c.slug : '') === categoryFilter,
+    );
+    if (match) return typeof match === 'object' ? match.name : match;
+    // Fallback: capitalise slug words
+    return categoryFilter
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }, [categoryFilter, categories]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 flex h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-rose border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-8 lg:flex-row">
@@ -146,18 +171,22 @@ function ShopContent() {
           <div>
             <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-slate-900">Categories</h3>
             <div className="space-y-2">
-              {CATEGORIES.map((cat) =>
-              <button
-                key={cat}
-                onClick={() => updateFilter('category', categoryFilter === cat ? null : cat)}
-                className={cn(
-                  "block w-full text-left text-sm transition-colors hover:text-brand-rose",
-                  categoryFilter === cat ? "font-bold text-brand-rose" : "text-slate-500"
-                )}>
-                
-                  {cat}
-                </button>
-              )}
+              {categories.map((cat) => {
+                const catName = typeof cat === 'object' && cat !== null ? cat.name : cat;
+                const catSlug = typeof cat === 'object' && cat !== null && cat.slug ? cat.slug : String(catName || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                const isActive = categoryFilter === catSlug;
+                return (
+                  <button
+                    key={cat._id || catSlug}
+                    onClick={() => updateFilter('category', isActive ? null : catSlug)}
+                    className={cn(
+                      "block w-full text-left text-sm transition-colors hover:text-brand-rose",
+                      isActive ? "font-bold text-brand-rose" : "text-slate-500"
+                    )}>
+                    {catName}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -208,7 +237,7 @@ function ShopContent() {
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <h1 className="text-4xl font-serif font-bold text-slate-900">
-                {categoryFilter || 'All Collection'}
+                {activeCategoryName || 'All Collection'}
               </h1>
               <p className="mt-1 text-sm text-slate-500">{filteredProducts.length} products found</p>
             </div>
@@ -242,7 +271,7 @@ function ShopContent() {
               <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Active:</span>
               {categoryFilter &&
             <span className="flex items-center gap-1 rounded-full bg-brand-pink px-3 py-1 text-xs font-bold text-brand-rose">
-                  {categoryFilter} <X className="h-3 w-3 cursor-pointer" onClick={() => updateFilter('category', null)} />
+                  {activeCategoryName} <X className="h-3 w-3 cursor-pointer" onClick={() => updateFilter('category', null)} />
                 </span>
             }
               {sizeFilter &&
@@ -352,18 +381,22 @@ function ShopContent() {
                 <div>
                   <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-slate-900">Categories</h3>
                   <div className="flex flex-wrap gap-2">
-                    {CATEGORIES.map((cat) =>
-                  <button
-                    key={cat}
-                    onClick={() => updateFilter('category', categoryFilter === cat ? null : cat)}
-                    className={cn(
-                      "rounded-full border px-4 py-2 text-xs font-medium transition-all",
-                      categoryFilter === cat ? "border-brand-rose bg-brand-rose text-white" : "border-slate-200 text-slate-500"
-                    )}>
-                    
-                        {cat}
-                      </button>
-                  )}
+                    {categories.map((cat) => {
+                      const catName = typeof cat === 'object' && cat !== null ? cat.name : cat;
+                      const catSlug = typeof cat === 'object' && cat !== null && cat.slug ? cat.slug : String(catName || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                      const isActive = categoryFilter === catSlug;
+                      return (
+                        <button
+                          key={cat._id || catSlug}
+                          onClick={() => updateFilter('category', isActive ? null : catSlug)}
+                          className={cn(
+                            "rounded-full border px-4 py-2 text-xs font-medium transition-all",
+                            isActive ? "border-brand-rose bg-brand-rose text-white" : "border-slate-200 text-slate-500"
+                          )}>
+                          {catName}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

@@ -5,7 +5,6 @@ import { Star, MessageSquare, Trash2, Send, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import mockReviews from '../data/reviews.json';
 
 export default function ProductReviews({ productId }) {
   const { user, profile, loginWithGoogle } = useAuth();
@@ -20,11 +19,24 @@ export default function ProductReviews({ productId }) {
   }, [productId]);
 
   const fetchReviews = () => {
-    // Combine local storage reviews with mock ones
-    const localReviews = JSON.parse(localStorage.getItem('aura_reviews') || '[]');
-    const allReviews = [...mockReviews, ...localReviews];
-    const productReviews = allReviews.filter(r => r.productId === productId);
-    setReviews(productReviews);
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    fetch(`${API_URL}/api/reviews/product/${productId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.reviews) {
+          const formatted = data.reviews.map(r => ({
+            id: r._id,
+            productId: r.product,
+            userId: r.user?._id || r.user?.id || r.user,
+            userName: r.user?.name || 'Anonymous',
+            rating: r.rating,
+            comment: r.comment,
+            createdAt: r.createdAt
+          }));
+          setReviews(formatted);
+        }
+      })
+      .catch((err) => console.error('Error fetching reviews:', err));
   };
 
   const handleSubmit = async (e) => {
@@ -37,28 +49,34 @@ export default function ProductReviews({ productId }) {
     if (!comment.trim()) return;
 
     setIsSubmitting(true);
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
     try {
-      const newReview = {
-        id: `rev-${Date.now()}`,
-        productId,
-        userId: user.id || user.uid,
-        userName: profile.name || profile.displayName || 'Anonymous',
-        rating,
-        comment: comment.trim(),
-        createdAt: new Date().toISOString()
+      const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const headers = {
+        'Content-Type': 'application/json',
       };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
-      const localReviews = JSON.parse(localStorage.getItem('aura_reviews') || '[]');
-      localReviews.push(newReview);
-      localStorage.setItem('aura_reviews', JSON.stringify(localReviews));
+      const res = await fetch(`${API_URL}/api/reviews/${productId}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          rating,
+          comment: comment.trim()
+        })
+      });
 
-      setComment('');
-      setRating(5);
-      fetchReviews();
+      const data = await res.json();
+      if (data.success) {
+        setComment('');
+        setRating(5);
+        fetchReviews();
+      } else {
+        alert(data.message || 'Failed to add review');
+      }
     } catch (error) {
       console.error('Error adding review:', error);
     } finally {
@@ -68,11 +86,26 @@ export default function ProductReviews({ productId }) {
 
   const handleDelete = async (reviewId) => {
     if (!window.confirm('Are you sure you want to delete this review?')) return;
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
     try {
-      const localReviews = JSON.parse(localStorage.getItem('aura_reviews') || '[]');
-      const updatedReviews = localReviews.filter(r => r.id !== reviewId);
-      localStorage.setItem('aura_reviews', JSON.stringify(updatedReviews));
-      fetchReviews();
+      const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${API_URL}/api/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        fetchReviews();
+      } else {
+        alert(data.message || 'Failed to delete review');
+      }
     } catch (error) {
       console.error('Error deleting review:', error);
     }
