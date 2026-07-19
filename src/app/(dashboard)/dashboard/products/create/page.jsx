@@ -9,6 +9,17 @@ import RoleGuard from "@/components/dashboard/RoleGuard";
 import { createProduct, getCategories } from "@/lib/api";
 import { DIVISIONS } from "@/lib/bangladeshData";
 
+const STANDARD_COLORS = [
+  "Rose Gold", "Black", "Cream", "Midnight Blue", "Emerald", "Burgundy", 
+  "Floral Pink", "Deep Red", "Nude", "White", "Lavender", "Mint Green", 
+  "Beige", "Ivory White", "Blush Pink", "Crimson Red", "Champagne", "Navy Blue"
+];
+
+const STANDARD_SIZES = [
+  "S", "M", "L", "XL", "XXL", "Free Size", 
+  "32A", "32B", "34B", "34C", "36B", "36C"
+];
+
 function normalizeCategories(payload) {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.categories)) return payload.categories;
@@ -25,6 +36,10 @@ export default function CreateProductPage() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDivisions, setSelectedDivisions] = useState([]);
+  const [selectedColors, setSelectedColors] = useState([]);
+  const [customColors, setCustomColors] = useState("");
+  const [selectedSizes, setSelectedSizes] = useState([]);
+  const [customSizes, setCustomSizes] = useState("");
   const fileInputRef = useRef(null);
 
   const {
@@ -136,6 +151,26 @@ export default function CreateProductPage() {
     try {
       setIsSubmitting(true);
 
+      const colorsList = [...selectedColors];
+      if (customColors.trim()) {
+        customColors.split(',').forEach(c => {
+          const trimmed = c.trim();
+          if (trimmed && !colorsList.includes(trimmed)) {
+            colorsList.push(trimmed);
+          }
+        });
+      }
+
+      const sizesList = [...selectedSizes];
+      if (customSizes.trim()) {
+        customSizes.split(',').forEach(s => {
+          const trimmed = s.trim();
+          if (trimmed && !sizesList.includes(trimmed)) {
+            sizesList.push(trimmed);
+          }
+        });
+      }
+
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("slug", data.slug);
@@ -148,6 +183,8 @@ export default function CreateProductPage() {
       formData.append("stock", data.stock);
       formData.append("featured", data.featured ? "true" : "false");
       formData.append('availableDivisions', JSON.stringify(selectedDivisions));
+      formData.append('colors', JSON.stringify(colorsList));
+      formData.append('sizes', JSON.stringify(sizesList));
 
       const specsArray = (data.specifications || [])
         .filter(f => f?.key?.trim() && f?.value?.trim())
@@ -183,6 +220,10 @@ export default function CreateProductPage() {
         specifications: [{ key: "", value: "" }],
       });
       setSelectedDivisions([]);
+      setSelectedColors([]);
+      setCustomColors("");
+      setSelectedSizes([]);
+      setCustomSizes("");
       setImagePreviews([]);
       setSelectedFiles([]);
       if (fileInputRef.current) {
@@ -322,6 +363,76 @@ export default function CreateProductPage() {
             <p className="mt-1 text-xs text-slate-500">
               Leave all unchecked = available in all divisions (this is just informational, it will not hide the product from anyone)
             </p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Product Colors</label>
+            <div className="rounded-2xl border border-gray-200 p-4 space-y-4">
+              <div className="flex flex-wrap gap-3">
+                {STANDARD_COLORS.map((color) => (
+                  <label key={color} className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 border border-slate-100 rounded-full px-3 py-1.5 hover:bg-slate-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={selectedColors.includes(color)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedColors([...selectedColors, color]);
+                        } else {
+                          setSelectedColors(selectedColors.filter((c) => c !== color));
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                    />
+                    {color}
+                  </label>
+                ))}
+              </div>
+              <div className="pt-2 border-t border-slate-100">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Custom Colors</label>
+                <input
+                  type="text"
+                  value={customColors}
+                  onChange={(e) => setCustomColors(e.target.value)}
+                  className="w-full rounded-2xl border border-gray-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                  placeholder="e.g. Gold, Silver, Rose (comma-separated)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Product Sizes</label>
+            <div className="rounded-2xl border border-gray-200 p-4 space-y-4">
+              <div className="flex flex-wrap gap-3">
+                {STANDARD_SIZES.map((size) => (
+                  <label key={size} className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 border border-slate-100 rounded-full px-3 py-1.5 hover:bg-slate-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={selectedSizes.includes(size)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedSizes([...selectedSizes, size]);
+                        } else {
+                          setSelectedSizes(selectedSizes.filter((s) => s !== size));
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                    />
+                    {size}
+                  </label>
+                ))}
+              </div>
+              <div className="pt-2 border-t border-slate-100">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Custom Sizes</label>
+                <input
+                  type="text"
+                  value={customSizes}
+                  onChange={(e) => setCustomSizes(e.target.value)}
+                  className="w-full rounded-2xl border border-gray-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                  placeholder="e.g. 38C, 40D, XXL (comma-separated)"
+                />
+              </div>
+            </div>
           </div>
 
           <div>
