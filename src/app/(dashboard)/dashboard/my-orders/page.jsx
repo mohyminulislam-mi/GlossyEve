@@ -212,7 +212,7 @@ export default function MyOrdersPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-slate-800">
-                      ${Number(order.total).toFixed(2)}
+                      ৳{Number(order.total).toLocaleString()}
                     </p>
                     <div className="mt-1">
                       <StatusBadge status={order.orderStatus} />
@@ -292,10 +292,10 @@ export default function MyOrdersPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-slate-800">
-                          ${Number(item.price).toFixed(2)}
+                          ৳{Number(item.price).toLocaleString()}
                         </p>
                         <p className="text-xs text-slate-500">
-                          ${(Number(item.price) * item.quantity).toFixed(2)}
+                          ৳{(Number(item.price) * item.quantity).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -307,23 +307,14 @@ export default function MyOrdersPage() {
               {selectedOrder.shippingAddress && (
                 <div className="rounded-2xl border border-gray-100 p-4">
                   <h3 className="text-sm font-semibold text-slate-800 mb-3">Shipping Address</h3>
-                  <p className="text-sm text-slate-600 whitespace-pre-line">
-                    {selectedOrder.shippingAddress.street}
-                    {selectedOrder.shippingAddress.city && (
-                      <>, {selectedOrder.shippingAddress.city}</>
-                    )}
-                    {selectedOrder.shippingAddress.postalCode && (
-                      <>
-                        <br />
-                        {selectedOrder.shippingAddress.postalCode}
-                      </>
-                    )}
-                    {selectedOrder.shippingAddress.country && (
-                      <>
-                        <br />
-                        {selectedOrder.shippingAddress.country}
-                      </>
-                    )}
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    {[
+                      selectedOrder.shippingAddress?.street,
+                      selectedOrder.shippingAddress?.city,
+                      selectedOrder.shippingAddress?.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
                   </p>
                 </div>
               )}

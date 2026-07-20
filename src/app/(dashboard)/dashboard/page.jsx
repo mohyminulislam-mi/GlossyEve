@@ -383,7 +383,7 @@ export default function DashboardPage() {
                         {order.user?.name || "Unknown"}
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-800">
-                        ${Number(order.total).toFixed(2)}
+                        ৳{Number(order.total).toLocaleString()}
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={order.orderStatus} />
@@ -492,7 +492,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs font-semibold text-slate-800">
-                    ${Number(order.total).toFixed(2)}
+                    ৳{Number(order.total).toLocaleString()}
                   </p>
                   <StatusBadge status={order.orderStatus} />
                 </div>

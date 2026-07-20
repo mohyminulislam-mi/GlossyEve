@@ -135,7 +135,7 @@ const PendingDeliveryPage = () => {
                     </td>
                     <td className="px-4 py-3 text-slate-600">{order.items?.length || 0}</td>
                     <td className="px-4 py-3 font-semibold text-slate-800">
-                      ${Number(order.total).toFixed(2)}
+                      ৳{Number(order.total).toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       {new Date(order.createdAt).toLocaleDateString()}

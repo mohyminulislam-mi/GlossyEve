@@ -431,7 +431,7 @@ export default function CustomersPage() {
                               </div>
                               <div className="text-right">
                                 <p className="text-sm font-semibold text-slate-800 mb-0.5">
-                                  ${Number(order.total).toFixed(2)}
+                                  ৳{Number(order.total).toLocaleString()}
                                 </p>
                                 <StatusBadge status={order.orderStatus} />
                               </div>

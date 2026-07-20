@@ -28,28 +28,35 @@ export const CartProvider = ({ children }) => {
     }
   }, [cart, isLoaded]);
 
-  const addToCart = (product, selectedSize, selectedColor) => {
+  const addToCart = (product, quantity = 1, selectedSize, selectedColor) => {
     setCart(prev => {
-      const existing = prev.find(item => 
-        item.productId === product.id && 
-        item.selectedSize === selectedSize && 
+      const existing = prev.find(item =>
+        item.productId === product.id &&
+        item.selectedSize === selectedSize &&
         item.selectedColor === selectedColor
       );
+
       if (existing) {
-        return prev.map(item => 
-          item.id === existing.id ? { ...item, quantity: item.quantity + 1 } : item
+        return prev.map(item =>
+          item.id === existing.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
         );
       }
-      return [...prev, {
-        id: `cart_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        productId: product.id,
-        name: product.name || product.title,
-        price: product.price,
-        selectedSize,
-        selectedColor,
-        images: product.images || [product.image],
-        quantity: 1
-      }];
+
+      return [
+        ...prev,
+        {
+          id: `cart_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          productId: product.id,
+          name: product.name || product.title,
+          price: product.price,
+          selectedSize,
+          selectedColor,
+          images: product.images || [product.image],
+          quantity,
+        },
+      ];
     });
   };
 
