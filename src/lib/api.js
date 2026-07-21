@@ -22,7 +22,12 @@ async function request(endpoint, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok || data.success === false) {
-    throw new Error(data.message || "Request failed");
+    const errorMsg =
+      data.message ||
+      data.error ||
+      (typeof data === "string" && data) ||
+      `Request failed with status ${response.status}`;
+    throw new Error(errorMsg);
   }
 
   return data.data ?? data;
@@ -40,7 +45,12 @@ async function requestFormData(endpoint, method, formData) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok || data.success === false) {
-    throw new Error(data.message || "Request failed");
+    const errorMsg =
+      data.message ||
+      data.error ||
+      (typeof data === "string" && data) ||
+      `Request failed with status ${response.status}`;
+    throw new Error(errorMsg);
   }
 
   return data.data ?? data;
@@ -138,9 +148,22 @@ export async function createOrder(data) {
 
 export async function createManagerOrder(orderData) {
   const { customerName, customerPhone, customerAddress, items } = orderData;
-  return request("/api/orders/manager-create", {
+  const shippingAddress = {
+    street: customerAddress?.streetAddress || customerAddress?.street || "N/A",
+    city: customerAddress?.city || customerAddress?.district || customerAddress?.division || "N/A",
+    postalCode: customerAddress?.postalCode || "1000",
+    country: customerAddress?.country || "Bangladesh",
+  };
+
+  return request("/api/orders", {
     method: "POST",
-    body: { customerName, customerPhone, customerAddress, items },
+    body: {
+      items,
+      shippingAddress,
+      paymentMethod: "cod",
+      customerName,
+      customerPhone,
+    },
   });
 }
 

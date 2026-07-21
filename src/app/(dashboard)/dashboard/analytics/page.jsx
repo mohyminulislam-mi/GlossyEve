@@ -179,7 +179,7 @@ export default function AnalyticsPage() {
                   <h3 className="text-lg font-semibold text-slate-800">Monthly Revenue</h3>
                 </div>
                 <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={charts.revenueChart}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis
@@ -218,7 +218,7 @@ export default function AnalyticsPage() {
                   <h3 className="text-lg font-semibold text-slate-800">Sales by Category</h3>
                 </div>
                 <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <RePieChart>
                       <Pie
                         data={charts.categoryChart}
@@ -257,7 +257,7 @@ export default function AnalyticsPage() {
                   <h3 className="text-lg font-semibold text-slate-800">Order Status Distribution</h3>
                 </div>
                 <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={charts.orderChart}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis

@@ -17,14 +17,16 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
+      // rawAddress is the original object from backend; address is a formatted string
+      const rawAddr = user.rawAddress || {};
       reset({
         name: user.name || "",
         phone: user.phone || "",
         address: {
-          street: user.address?.street || "",
-          city: user.address?.city || "",
-          postalCode: user.address?.postalCode || "",
-          country: user.address?.country || "",
+          street: (typeof rawAddr === "object" ? rawAddr.street : "") || "",
+          city: (typeof rawAddr === "object" ? rawAddr.city : "") || "",
+          postalCode: (typeof rawAddr === "object" ? rawAddr.postalCode : "") || "",
+          country: (typeof rawAddr === "object" ? rawAddr.country : "") || "",
         },
       });
     }

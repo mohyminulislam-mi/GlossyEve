@@ -29,10 +29,12 @@ const normalizeUser = (backendUser) => {
     uid: backendUser.id || backendUser._id,
     id: backendUser.id || backendUser._id,
     displayName: backendUser.name || backendUser.displayName || '',
+    name: backendUser.name || backendUser.displayName || '',
     email: backendUser.email || '',
     role: backendUser.role || 'customer',
     phone: backendUser.phone || '',
     address: addressString,
+    rawAddress: backendUser.address || null,
     wishlist: backendUser.wishlist || [],
     avatar: backendUser.avatar || '',
     investmentAmount: backendUser.investmentAmount || 0
@@ -210,12 +212,21 @@ export function AuthProvider({ children }) {
       };
 
       if (newData.address !== undefined) {
-        body.address = {
-          street: newData.address,
-          city: '',
-          postalCode: '',
-          country: ''
-        };
+        if (typeof newData.address === 'object' && newData.address !== null) {
+          body.address = {
+            street: newData.address.street || '',
+            city: newData.address.city || '',
+            postalCode: newData.address.postalCode || '',
+            country: newData.address.country || ''
+          };
+        } else {
+          body.address = {
+            street: String(newData.address),
+            city: '',
+            postalCode: '',
+            country: ''
+          };
+        }
       }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
@@ -244,7 +255,7 @@ export function AuthProvider({ children }) {
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, signup, signupGuest, loginWithGoogle, logout, toggleWishlist, updateProfile, isAdmin }}>
+    <AuthContext.Provider value={{ user, profile, loading, login, signup, signupGuest, loginWithGoogle, logout, toggleWishlist, updateProfile, updateUser: updateProfile, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
