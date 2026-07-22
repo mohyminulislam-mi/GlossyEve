@@ -142,6 +142,15 @@ export async function getMyOrders() {
   return request("/api/orders/my-orders", { method: "GET" });
 }
 
+// ==================== REVIEWS ====================
+export async function getMyUserReviews() {
+  return request("/api/reviews/my-reviews", { method: "GET" });
+}
+
+export async function deleteUserReview(id) {
+  return request(`/api/reviews/${id}`, { method: "DELETE" });
+}
+
 export async function createOrder(data) {
   return apiPost("/api/orders", data);
 }

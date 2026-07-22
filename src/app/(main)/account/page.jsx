@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Package,
@@ -10,7 +12,6 @@ import {
   Clock,
   Star,
   MessageSquare,
-  Edit3,
   Trash2,
   X,
   ChevronRight,
@@ -18,11 +19,13 @@ import {
   Truck,
   XCircle,
   Loader2,
+  ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/context/CartContext";
 import { cn } from "@/lib/utils";
-import { getMyOrders } from "@/lib/api";
+import { getMyOrders, getMyUserReviews, deleteUserReview } from "@/lib/api";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -75,8 +78,6 @@ function StatusStepper({ status }) {
       </div>
     );
   }
-
-  const activeKeys = ["placed", ...(status !== "pending" ? ["processing"] : []), "shipped", "delivered"];
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-1">
@@ -176,7 +177,7 @@ function OrderDetailModal({ order, onClose }) {
                       {item.product?.images?.[0] ? (
                         <img
                           src={item.product.images[0]}
-                          alt={item.name}
+                          alt={item.name || item.product?.name}
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -185,7 +186,7 @@ function OrderDetailModal({ order, onClose }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-slate-900 truncate">
-                        {item.name}
+                        {item.name || item.product?.name}
                       </p>
                       <p className="text-xs text-slate-500">
                         Qty: {item.quantity}
@@ -193,7 +194,7 @@ function OrderDetailModal({ order, onClose }) {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-brand-rose">
-                        ৳{(Number(item.price) * item.quantity).toLocaleString()}
+                        ৳{(Number(item.price || item.product?.price || 0) * item.quantity).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -223,11 +224,11 @@ function OrderDetailModal({ order, onClose }) {
             <div className="rounded-2xl border border-slate-100 p-4 space-y-2">
               <div className="flex justify-between text-sm text-slate-500">
                 <span>Subtotal</span>
-                <span>৳{Number(order.subtotal).toLocaleString()}</span>
+                <span>৳{Number(order.subtotal || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm text-slate-500">
                 <span>Shipping</span>
-                <span>৳{Number(order.shippingCost).toLocaleString()}</span>
+                <span>৳{Number(order.shippingCost || 0).toLocaleString()}</span>
               </div>
               {Number(order.discount) > 0 && (
                 <div className="flex justify-between text-sm text-emerald-600 font-medium">
@@ -238,7 +239,7 @@ function OrderDetailModal({ order, onClose }) {
               <div className="border-t border-slate-100 pt-2 flex justify-between text-base font-bold text-slate-900">
                 <span>Total</span>
                 <span className="text-brand-rose">
-                  ৳{Number(order.total).toLocaleString()}
+                  ৳{Number(order.total || 0).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -283,23 +284,55 @@ function OrderDetailModal({ order, onClose }) {
 function MyReviewsSection({ userId }) {
   const router = useRouter();
   const [userReviews, setUserReviews] = useState([]);
-  const [editingReview, setEditingReview] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchReviews = async () => {
+    setLoading(true);
+    try {
+      const data = await getMyUserReviews();
+      if (data?.reviews && data.reviews.length > 0) {
+        setUserReviews(data.reviews);
+      } else {
+        const localReviews = JSON.parse(
+          localStorage.getItem("aura_reviews") || "[]"
+        );
+        setUserReviews(localReviews.filter((r) => r.userId === userId));
+      }
+    } catch (e) {
+      const localReviews = JSON.parse(
+        localStorage.getItem("aura_reviews") || "[]"
+      );
+      setUserReviews(localReviews.filter((r) => r.userId === userId));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const localReviews = JSON.parse(
-      localStorage.getItem("aura_reviews") || "[]"
-    );
-    setUserReviews(localReviews.filter((r) => r.userId === userId));
+    fetchReviews();
   }, [userId]);
 
-  const handleDeleteReview = (reviewId) => {
+  const handleDeleteReview = async (reviewId) => {
     if (!window.confirm("Delete this review?")) return;
-    const updated = JSON.parse(
-      localStorage.getItem("aura_reviews") || "[]"
-    ).filter((r) => r.id !== reviewId);
-    localStorage.setItem("aura_reviews", JSON.stringify(updated));
-    setUserReviews((prev) => prev.filter((r) => r.id !== reviewId));
+    try {
+      await deleteUserReview(reviewId);
+      setUserReviews((prev) => prev.filter((r) => (r._id || r.id) !== reviewId));
+    } catch (err) {
+      const updated = JSON.parse(
+        localStorage.getItem("aura_reviews") || "[]"
+      ).filter((r) => r.id !== reviewId);
+      localStorage.setItem("aura_reviews", JSON.stringify(updated));
+      setUserReviews((prev) => prev.filter((r) => (r._id || r.id) !== reviewId));
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-rose" />
+      </div>
+    );
+  }
 
   if (!userReviews.length) {
     return (
@@ -319,38 +352,55 @@ function MyReviewsSection({ userId }) {
   return (
     <div className="grid grid-cols-1 gap-6">
       {userReviews.map((review) => {
-        const isEditingThis = editingReview?.id === review.id;
+        const reviewId = review._id || review.id;
+        const productName = review.product?.name || review.productName || "Product";
+        const productImage = review.product?.images?.[0] || review.productImage;
+        const productId = review.product?._id || review.product?.id || review.productId;
+
         return (
           <motion.div
-            key={review.id}
+            key={reviewId}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100"
           >
             <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-1 mt-1">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star
-                      key={s}
-                      className={cn(
-                        "h-4 w-4",
-                        s <= review.rating
-                          ? "fill-amber-400 text-amber-400"
-                          : "text-slate-200"
-                      )}
-                    />
-                  ))}
+              <div className="flex items-center gap-3">
+                {productImage && (
+                  <div className="h-12 w-12 overflow-hidden rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0">
+                    <img src={productImage} alt={productName} className="h-full w-full object-cover" />
+                  </div>
+                )}
+                <div>
+                  {productId ? (
+                    <Link href={`/product/${productId}`} className="font-bold text-slate-900 hover:text-brand-rose transition-colors">
+                      {productName}
+                    </Link>
+                  ) : (
+                    <h4 className="font-bold text-slate-900">{productName}</h4>
+                  )}
+                  <div className="flex items-center gap-1 mt-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className={cn(
+                          "h-4 w-4",
+                          s <= review.rating
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-slate-200"
+                        )}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleDeleteReview(review.id)}
-                  className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                onClick={() => handleDeleteReview(reviewId)}
+                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                title="Delete review"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
             <p className="mt-3 text-sm text-slate-600 leading-relaxed italic">
               "{review.comment}"
@@ -365,14 +415,142 @@ function MyReviewsSection({ userId }) {
   );
 }
 
+// ─── Wishlist Section ─────────────────────────────────────────────────────────
+function WishlistSection() {
+  const { wishlist, removeFromWishlist, isLoaded } = useWishlist();
+  const { addToCart } = useCart();
+  const router = useRouter();
+
+  if (!isLoaded) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-rose" />
+      </div>
+    );
+  }
+
+  if (!wishlist.length) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center space-y-4 rounded-3xl bg-white text-center shadow-sm border border-slate-100">
+        <Heart className="h-12 w-12 text-slate-200" />
+        <p className="text-slate-500">Your wishlist is empty.</p>
+        <button
+          onClick={() => router.push("/shop")}
+          className="text-sm font-bold text-brand-rose hover:underline"
+        >
+          Start Shopping
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {wishlist.map((item) => {
+        const id = item.id || item._id;
+        const name = item.name || "Product";
+        const price = item.price || 0;
+        const image = item.images?.[0] || item.image;
+        const category = item.category || "General";
+
+        return (
+          <motion.div
+            key={id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="group relative overflow-hidden rounded-3xl bg-white shadow-sm border border-slate-100 transition-all hover:shadow-md"
+          >
+            <Link href={`/product/${id}`} className="block aspect-[4/3] overflow-hidden bg-slate-50">
+              {image ? (
+                <img
+                  src={image}
+                  alt={name}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-slate-300">
+                  <Package className="h-10 w-10" />
+                </div>
+              )}
+            </Link>
+
+            <button
+              onClick={() => removeFromWishlist(id)}
+              className="absolute right-3 top-3 rounded-full bg-white/80 p-2 text-rose-500 backdrop-blur-sm transition-all hover:bg-white hover:scale-110 shadow-sm"
+              title="Remove from wishlist"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+
+            <div className="p-5">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                {typeof category === "object" ? category.name : category}
+              </span>
+              <Link href={`/product/${id}`} className="block mt-1">
+                <h3 className="truncate font-bold text-slate-900 transition-colors hover:text-brand-rose">
+                  {name}
+                </h3>
+              </Link>
+              <p className="mt-2 font-bold text-brand-rose">
+                ৳{Number(price).toLocaleString()}
+              </p>
+
+              <button
+                onClick={() =>
+                  addToCart(
+                    item,
+                    1,
+                    item.sizes?.[0] || item.sizes || "",
+                    item.colors?.[0] || item.colors || ""
+                  )
+                }
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-3 text-xs font-bold text-white transition-all hover:bg-slate-800"
+              >
+                <ShoppingBag className="h-4 w-4" /> Add to Cart
+              </button>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Profile Edit Form ────────────────────────────────────────────────────────
-function ProfileSection({ user, profile, updateProfile }) {
+function ProfileSection({ profile, updateProfile }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const addressObj =
+    typeof profile?.rawAddress === "object" && profile?.rawAddress !== null
+      ? profile.rawAddress
+      : {};
+
   const [form, setForm] = useState({
-    displayName: profile?.displayName || "",
+    displayName: profile?.displayName || profile?.name || "",
     phone: profile?.phone || "",
+    street: addressObj.street || (typeof profile?.address === "string" ? profile.address : ""),
+    city: addressObj.city || "",
+    postalCode: addressObj.postalCode || "",
+    country: addressObj.country || "Bangladesh",
   });
+
+  useEffect(() => {
+    if (profile) {
+      const addr =
+        typeof profile.rawAddress === "object" && profile.rawAddress !== null
+          ? profile.rawAddress
+          : {};
+      setForm({
+        displayName: profile.displayName || profile.name || "",
+        phone: profile.phone || "",
+        street: addr.street || (typeof profile.address === "string" ? profile.address : ""),
+        city: addr.city || "",
+        postalCode: addr.postalCode || "",
+        country: addr.country || "Bangladesh",
+      });
+    }
+  }, [profile]);
 
   const updateField = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -381,7 +559,16 @@ function ProfileSection({ user, profile, updateProfile }) {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await updateProfile(form);
+      await updateProfile({
+        displayName: form.displayName,
+        phone: form.phone,
+        address: {
+          street: form.street,
+          city: form.city,
+          postalCode: form.postalCode,
+          country: form.country,
+        },
+      });
       setIsEditing(false);
     } catch (err) {
       console.error("Profile update error:", err);
@@ -414,7 +601,7 @@ function ProfileSection({ user, profile, updateProfile }) {
               Full Name
             </p>
             <p className="mt-1 font-bold text-slate-900">
-              {profile?.displayName || "—"}
+              {profile?.displayName || profile?.name || "—"}
             </p>
           </div>
           <div>
@@ -431,6 +618,14 @@ function ProfileSection({ user, profile, updateProfile }) {
             </p>
             <p className="mt-1 font-bold text-slate-900">
               {profile?.phone || "Not provided"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+              Shipping Address
+            </p>
+            <p className="mt-1 font-bold text-slate-900">
+              {profile?.address || "Not provided"}
             </p>
           </div>
         </div>
@@ -455,9 +650,43 @@ function ProfileSection({ user, profile, updateProfile }) {
               </label>
               <input
                 type="tel"
-                required
                 value={form.phone}
                 onChange={updateField("phone")}
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                Street Address
+              </label>
+              <input
+                type="text"
+                value={form.street}
+                onChange={updateField("street")}
+                placeholder="House, Road, Area..."
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                City / District
+              </label>
+              <input
+                type="text"
+                value={form.city}
+                onChange={updateField("city")}
+                placeholder="Dhaka, Chittagong..."
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                Country
+              </label>
+              <input
+                type="text"
+                value={form.country}
+                onChange={updateField("country")}
                 className={inputClass}
               />
             </div>
@@ -480,6 +709,7 @@ const NAV_TABS = [
   { id: "orders", label: "My Orders", icon: Package },
   { id: "profile", label: "Profile Info", icon: UserIcon },
   { id: "reviews", label: "My Reviews", icon: MessageSquare },
+  { id: "wishlist", label: "Wishlist", icon: Heart },
 ];
 
 // ─── Main Account Page ────────────────────────────────────────────────────────
@@ -531,10 +761,10 @@ export default function Account() {
             {/* Avatar card */}
             <div className="rounded-3xl bg-white p-8 shadow-sm text-center">
               <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-brand-pink text-brand-rose text-3xl font-serif font-bold">
-                {user.displayName?.[0]?.toUpperCase() || "U"}
+                {user.displayName?.[0]?.toUpperCase() || user.name?.[0]?.toUpperCase() || "U"}
               </div>
               <h2 className="font-serif text-xl font-bold text-slate-900">
-                {user.displayName}
+                {user.displayName || user.name}
               </h2>
               <p className="text-xs text-slate-400 truncate mt-1">
                 {user.email}
@@ -557,12 +787,6 @@ export default function Account() {
                   <Icon className="h-5 w-5" /> {label}
                 </button>
               ))}
-              <button
-                onClick={() => router.push("/wishlist")}
-                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all"
-              >
-                <Heart className="h-5 w-5" /> Wishlist
-              </button>
               <button
                 onClick={logout}
                 className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-rose-500 transition-all hover:bg-rose-50"
@@ -643,7 +867,7 @@ export default function Account() {
                           <div>
                             <p className="text-xs text-slate-400">Total</p>
                             <p className="text-lg font-bold text-brand-rose">
-                              ৳{Number(order.total).toLocaleString()}
+                              ৳{Number(order.total || 0).toLocaleString()}
                             </p>
                           </div>
                           <button
@@ -668,7 +892,6 @@ export default function Account() {
                   Profile Information
                 </h2>
                 <ProfileSection
-                  user={user}
                   profile={profile}
                   updateProfile={updateProfile}
                 />
@@ -682,6 +905,16 @@ export default function Account() {
                   My Reviews
                 </h2>
                 <MyReviewsSection userId={user.id || user.uid} />
+              </div>
+            )}
+
+            {/* Wishlist tab */}
+            {activeTab === "wishlist" && (
+              <div className="space-y-6">
+                <h2 className="text-3xl font-serif font-bold text-slate-900">
+                  Wishlist
+                </h2>
+                <WishlistSection />
               </div>
             )}
           </div>
