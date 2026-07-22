@@ -32,6 +32,7 @@ const normalizeUser = (backendUser) => {
     name: backendUser.name || backendUser.displayName || '',
     email: backendUser.email || '',
     role: backendUser.role || 'customer',
+    isApproved: backendUser.isApproved !== undefined ? backendUser.isApproved : (backendUser.role !== 'manager'),
     phone: backendUser.phone || '',
     address: addressString,
     rawAddress: backendUser.address || null,

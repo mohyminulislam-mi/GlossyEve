@@ -141,7 +141,7 @@ export default function DashboardLayout({ children }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-500">Dashboard</p>
-                  <h2 className="text-lg font-semibold text-slate-800">Aonelube</h2>
+                  <h2 className="text-lg font-semibold text-slate-800">GlossyEve</h2>
                 </div>
                 <button
                   type="button"

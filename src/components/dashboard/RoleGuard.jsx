@@ -19,7 +19,10 @@ export default function RoleGuard({ children, allowedRoles = [] }) {
     );
   }
 
-  const hasAccess = user && (allowedRoles.length === 0 || allowedRoles.includes(user.role));
+  const hasAccess =
+    user &&
+    (allowedRoles.length === 0 || allowedRoles.includes(user.role)) &&
+    (user.role !== "manager" || user.isApproved !== false);
 
   if (!hasAccess) {
     return (
