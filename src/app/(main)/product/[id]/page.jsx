@@ -17,11 +17,11 @@ import {
   AlertCircle,
   Star,
   Maximize2,
-  Share2,
-  ArrowLeft,
-  Lock,
   Sparkles,
   X,
+  FileText,
+  SlidersHorizontal,
+  MessageSquare,
 } from "lucide-react";
 
 import { useCart } from "@/context/CartContext";
@@ -137,7 +137,7 @@ function ImageGallery({ images, productName, discountPercent, isOutOfStock }) {
   return (
     <div className="space-y-4">
       {/* Main Image Container */}
-      <div className="group relative aspect-[3/4] overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-100 shadow-md">
+      <div className="group relative aspect-[3/4] max-h-[620px] w-full overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-100 shadow-lg">
         <img
           src={images[activeIndex]}
           alt={productName}
@@ -431,6 +431,7 @@ export default function ProductDetail() {
   const [isSizeCalcOpen, setIsSizeCalcOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState({ size: false, color: false });
   const [toastMessage, setToastMessage] = useState(null);
+  const [activeTab, setActiveTab] = useState("description");
 
   // ── Fetch product from API ───────────────────────────────────────────────
   const fetchProduct = useCallback(async () => {
@@ -506,7 +507,8 @@ export default function ProductDetail() {
   };
 
   const scrollToReviews = () => {
-    const element = document.getElementById("customer-reviews");
+    setActiveTab("reviews");
+    const element = document.getElementById("product-tabs");
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
@@ -546,7 +548,7 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-gradient-to-b from-brand-pink/20 via-white to-white pb-24">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-xs font-bold text-white shadow-2xl animate-in fade-in slide-in-from-top-4">
+        <div className="fixed top-20 right-6 z-50 flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-xs font-bold text-white shadow-2xl">
           <CheckCircle2 className="h-4 w-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
@@ -572,27 +574,19 @@ export default function ProductDetail() {
           <span className="text-slate-400 truncate max-w-[200px]">{product.name}</span>
         </nav>
 
-        {/* ── MAIN CONTENT GRID ──────────────────────────────────────────────
-            LEFT COLUMN (col-span-7): Image Gallery + Customer Reviews directly underneath
-            RIGHT COLUMN (col-span-5): Buy Box + Description + Specs + Benefits + Delivery
-        ──────────────────────────────────────────────────────────────────── */}
+        {/* ── TOP HERO GRID (Gallery Left + Buy Box Right) ───────────────── */}
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14 items-start">
-          {/* LEFT COLUMN: Image Gallery & Customer Reviews directly underneath */}
-          <div className="lg:col-span-7 space-y-10">
+          {/* LEFT: Image Gallery (col-span-7) */}
+          <div className="lg:col-span-7 lg:sticky lg:top-24">
             <ImageGallery
               images={product.images}
               productName={product.name}
               discountPercent={product.discountPercent}
               isOutOfStock={isOutOfStock}
             />
-
-            {/* Customer Reviews in the space directly under the image gallery */}
-            <div className="border-t border-slate-200/80 pt-8">
-              <ProductReviews productId={product.id} />
-            </div>
           </div>
 
-          {/* RIGHT COLUMN: Buy Box & Product Specifications/Details */}
+          {/* RIGHT: Buy Box & Core Info (col-span-5) */}
           <div className="lg:col-span-5 space-y-8">
             {/* Header / Titles */}
             <div className="space-y-3">
@@ -743,80 +737,145 @@ export default function ProductDetail() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Description Card */}
-            {product.description && (
-              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-4">
-                <h4 className="text-lg font-serif font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <Sparkles className="h-5 w-5 text-brand-rose" /> Description
-                </h4>
-                <p className="text-sm leading-relaxed text-slate-600 font-normal">
-                  {product.description}
-                </p>
-              </div>
-            )}
+        {/* ── TABBED DETAILS & REVIEWS SECTION ────────────────────────────── */}
+        <div id="product-tabs" className="scroll-mt-24 border-t border-slate-200/80 pt-10">
+          {/* Tab Navigation Headers */}
+          <div className="flex border-b border-slate-200 overflow-x-auto gap-2 md:gap-4 pb-px scrollbar-none">
+            <button
+              onClick={() => setActiveTab("description")}
+              className={cn(
+                "flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer",
+                activeTab === "description"
+                  ? "border-brand-rose text-brand-rose bg-pink-50/60 rounded-t-2xl shadow-sm"
+                  : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50/80 rounded-t-2xl"
+              )}
+            >
+              <FileText className="h-4 w-4" />
+              <span>Description</span>
+            </button>
 
-            {/* Specifications Table */}
             {product.specifications && product.specifications.length > 0 && (
-              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-4">
-                <h4 className="text-lg font-serif font-bold text-slate-900 border-b border-slate-100 pb-3">
-                  Specifications
-                </h4>
-                <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/50">
-                  <table className="w-full text-xs">
-                    <tbody className="divide-y divide-slate-200/60">
-                      {product.specifications.map((spec, index) => (
-                        <tr key={index} className="hover:bg-slate-100/50 transition-colors">
-                          <td className="px-4 py-3 font-bold uppercase tracking-wider text-slate-400 w-1/3">
-                            {spec.key}
-                          </td>
-                          <td className="px-4 py-3 text-slate-800 font-semibold">
-                            {spec.value}
-                          </td>
-                        </tr>
+              <button
+                onClick={() => setActiveTab("specifications")}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer",
+                  activeTab === "specifications"
+                    ? "border-brand-rose text-brand-rose bg-pink-50/60 rounded-t-2xl shadow-sm"
+                    : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50/80 rounded-t-2xl"
+                )}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span>Specifications</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={cn(
+                "flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer",
+                activeTab === "reviews"
+                  ? "border-brand-rose text-brand-rose bg-pink-50/60 rounded-t-2xl shadow-sm"
+                  : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50/80 rounded-t-2xl"
+              )}
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>Customer Reviews</span>
+            </button>
+          </div>
+
+          {/* Tab Content Panels */}
+          <div className="pt-8">
+            {/* Description Tab Panel */}
+            {activeTab === "description" && (
+              <div className="space-y-8">
+                {product.description && (
+                  <div className="rounded-3xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-4">
+                    <h4 className="text-lg font-serif font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+                      <Sparkles className="h-5 w-5 text-brand-rose" /> Product Description
+                    </h4>
+                    <p className="text-sm leading-relaxed text-slate-600 font-normal">
+                      {product.description}
+                    </p>
+                  </div>
+                )}
+
+                {product.benefits && product.benefits.length > 0 && (
+                  <div className="rounded-3xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-4">
+                    <h4 className="text-lg font-serif font-bold text-slate-900 border-b border-slate-100 pb-3">
+                      Key Benefits
+                    </h4>
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {product.benefits.map((benefit, index) => (
+                        <li key={index} className="flex items-start gap-3 text-xs font-semibold text-slate-700">
+                          <CheckCircle2 className="h-4 w-4 text-brand-rose flex-shrink-0 mt-0.5" />
+                          <span>{benefit}</span>
+                        </li>
                       ))}
-                    </tbody>
-                  </table>
+                    </ul>
+                  </div>
+                )}
+
+                {product.availableDivisions && product.availableDivisions.length > 0 && (
+                  <div className="rounded-3xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-4">
+                    <h4 className="text-lg font-serif font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+                      <MapPin className="h-4 w-4 text-brand-rose" /> Delivery Availability
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      We deliver directly to your address in these divisions:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {product.availableDivisions.map((div, index) => (
+                        <span
+                          key={index}
+                          className="rounded-xl border border-brand-rose/20 bg-brand-pink/40 px-3.5 py-1.5 text-xs font-bold text-brand-rose"
+                        >
+                          {div}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Specifications Tab Panel */}
+            {activeTab === "specifications" && (
+              <div>
+                <div className="rounded-3xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-4">
+                  <h4 className="text-lg font-serif font-bold text-slate-900 border-b border-slate-100 pb-3">
+                    Technical Specifications
+                  </h4>
+                  {product.specifications && product.specifications.length > 0 ? (
+                    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/50">
+                      <table className="w-full text-xs md:text-sm">
+                        <tbody className="divide-y divide-slate-200/60">
+                          {product.specifications.map((spec, index) => (
+                            <tr key={index} className="hover:bg-slate-100/50 transition-colors">
+                              <td className="px-5 py-3.5 font-bold uppercase tracking-wider text-slate-400 w-1/3">
+                                {spec.key}
+                              </td>
+                              <td className="px-5 py-3.5 text-slate-800 font-semibold">
+                                {spec.value}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500">No specifications listed for this product.</p>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Key Benefits Checklist */}
-            {product.benefits && product.benefits.length > 0 && (
-              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-4">
-                <h4 className="text-lg font-serif font-bold text-slate-900 border-b border-slate-100 pb-3">
-                  Key Benefits
-                </h4>
-                <ul className="space-y-3">
-                  {product.benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start gap-3 text-xs font-semibold text-slate-700">
-                      <CheckCircle2 className="h-4 w-4 text-brand-rose flex-shrink-0 mt-0.5" />
-                      <span>{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Available Delivery Divisions */}
-            {product.availableDivisions && product.availableDivisions.length > 0 && (
-              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-4">
-                <h4 className="text-lg font-serif font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <MapPin className="h-4 w-4 text-brand-rose" /> Delivery Availability
-                </h4>
-                <p className="text-xs text-slate-500">
-                  We deliver directly to your address in these divisions:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {product.availableDivisions.map((div, index) => (
-                    <span
-                      key={index}
-                      className="rounded-xl border border-brand-rose/20 bg-brand-pink/40 px-3 py-1.5 text-xs font-bold text-brand-rose"
-                    >
-                      {div}
-                    </span>
-                  ))}
-                </div>
+            {/* Reviews Tab Panel */}
+            {activeTab === "reviews" && (
+              <div>
+                <ProductReviews productId={product.id} />
               </div>
             )}
           </div>
